@@ -6,7 +6,7 @@ import {
   TabsTrigger,
 } from "./components/ui/tabs";
 import { Dashboard } from "./components/Dashboard";
-import { NewSession } from "./components/NewSession";
+import { NewSession } from "./components/NewSessionSection";
 import { PendingTasks } from "./components/PendingTasks";
 import { SessionHistory } from "./components/SessionHistory";
 import { ActiveLeads } from "./components/ActiveLeads";
