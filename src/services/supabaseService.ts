@@ -1,5 +1,6 @@
 import { supabase, isSupabaseAvailable } from './supabaseClient';
 import type { SenalMercado } from '../types/senalMercado';
+import type { Semana } from '../types/semana';
 
 /**
  * Fetch market signals for a given week from Supabase
@@ -64,3 +65,29 @@ export async function fetchSenalesMercado(
     throw new Error('Failed to retrieve market signals from database');
   }
 }
+
+/**
+ * Fetch all weeks from Supabase
+ *
+ * Purpose: Retrieves all `semanas` records ordered from most recent to oldest.
+ * Used by the week navigation in `MasterIntelligenceReport` to drive the
+ * header display and prev/next arrow controls.
+ *
+ * @returns {Promise<Semana[]>} Array of week records ordered by fecha_inicio_semana DESC
+ * Returns empty array if Supabase is unavailable
+ */
+export async function fetchSemanas(): Promise<Semana[]> {
+  if (!isSupabaseAvailable() || !supabase) {
+    console.warn('[supabaseService] Supabase is not available - returning empty semanas list');
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('semanas')
+    .select('*')
+    .order('fecha_inicio_semana', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+

@@ -1,22 +1,51 @@
 // Report
 import { Button } from './ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, TrendingUp } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { CategoryTab } from './MasterReport/types';
-import { weeklyReports } from './MasterReport/data';
+import { weeklyReports } from './MasterReport/data'; // TODO: remove when content is connected to Supabase
 import { SenalesMercado } from './MasterReport/SenalesMercado';
 import { GanchosMercado } from './MasterReport/GanchosMercado';
+import { fetchSemanas } from '../../services/supabaseService';
+import type { Semana } from '../../types/semana';
 
 export function MasterIntelligenceReport() {
+  // --- State ---
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
   const [expandedSignals, setExpandedSignals] = useState<number[]>([]);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<CategoryTab>('companies');
+  const [semanas, setSemanas] = useState<Semana[]>([]);
 
-  const currentReport = weeklyReports[currentWeekIndex];
+  const currentReport = weeklyReports[currentWeekIndex]; // TODO: remove when content is connected to Supabase
+  const currentSemana = semanas[currentWeekIndex];       // currentSemana.id → fetchSenalesMercado / fetchGanchosMercado
 
+  // --- Effects ---
+  useEffect(() => {
+    fetchSemanas()
+      .then(data => {
+        setSemanas(data);
+        setIsLoadingSemanas(false);
+      })
+      .catch(() => setIsLoadingSemanas(false));
+  }, []);
+
+  // --- Helpers ---
+  const formatSemanaLabel = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const formatSignalDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short'
+    });
+  };
+
+  // --- Handlers ---
   const toggleSignal = (id: number) => {
     setExpandedSignals(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -31,10 +60,10 @@ export function MasterIntelligenceReport() {
   };
 
   const goToPreviousWeek = () => {
-    if (currentWeekIndex < weeklyReports.length - 1) {
+    if (currentWeekIndex < semanas.length - 1) {
       setCurrentWeekIndex(prev => prev + 1);
       setExpandedSignals([]);
-      toast.info(`Semana del ${weeklyReports[currentWeekIndex + 1].weekOf}`);
+      toast.info(`Semana del ${formatSemanaLabel(semanas[currentWeekIndex + 1]?.fecha_inicio_semana)}`);
     }
   };
 
@@ -42,16 +71,8 @@ export function MasterIntelligenceReport() {
     if (currentWeekIndex > 0) {
       setCurrentWeekIndex(prev => prev - 1);
       setExpandedSignals([]);
-      toast.info(`Semana del ${weeklyReports[currentWeekIndex - 1].weekOf}`);
+      toast.info(`Semana del ${formatSemanaLabel(semanas[currentWeekIndex - 1]?.fecha_inicio_semana)}`);
     }
-  };
-
-  const formatSignalDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short'
-    });
   };
 
   return (
@@ -62,7 +83,7 @@ export function MasterIntelligenceReport() {
           <div>
             <h2 className="text-xl sm:text-2xl font-medium mb-2">Master Intelligence Report</h2>
             <p className="text-xs sm:text-sm text-gray-500">
-              Actualizado: {new Date(currentReport.lastUpdated).toLocaleDateString('es-ES', {
+              Actualizado: {new Date(currentSemana?.fecha_creacion ?? currentReport.lastUpdated).toLocaleDateString('es-ES', {
                 day: 'numeric',
                 month: 'long',
                 hour: '2-digit',
@@ -95,7 +116,7 @@ export function MasterIntelligenceReport() {
         <div className="flex items-center justify-between sm:justify-center gap-2 sm:gap-4 py-3 sm:py-4 bg-[#C4FF81]/10 rounded-lg border-2 border-[#DCDEDC]">
           <Button
             onClick={goToPreviousWeek}
-            disabled={currentWeekIndex >= weeklyReports.length - 1}
+            disabled={isLoadingSemanas || currentWeekIndex >= semanas.length - 1}
             variant="ghost"
             size="sm"
             className="disabled:opacity-30 px-2 sm:px-3 hover:bg-[#1F554A]/10"
@@ -105,20 +126,32 @@ export function MasterIntelligenceReport() {
 
           <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial sm:min-w-[300px] justify-center">
             <Calendar className="size-3 sm:size-4 text-[#1F554A] hidden sm:block" />
-            <div className="text-center">
-              <p className="font-medium text-[#141414] text-sm sm:text-base">Semana del {currentReport.weekOf}</p>
-              <p className="text-[10px] sm:text-xs text-gray-600">
-                {new Date(currentReport.weekStart).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - {new Date(currentReport.weekEnd).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </p>
-            </div>
-            <Badge variant="outline" className="text-[10px] sm:text-xs border-[#1F554A] text-[#1F554A]">
-              {currentWeekIndex + 1}/{weeklyReports.length}
-            </Badge>
+            {isLoadingSemanas ? (
+              <Loader2 className="size-5 animate-spin text-[#1F554A]" />
+            ) : (
+              <>
+                <div className="text-center">
+                  <p className="font-medium text-[#141414] text-sm sm:text-base">
+                    Semana del {currentSemana?.fecha_inicio_semana && formatSemanaLabel(currentSemana.fecha_inicio_semana)}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-gray-600">
+                    {currentSemana && (
+                      <>
+                        {new Date(currentSemana.fecha_inicio_semana).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} - {new Date(currentSemana.fecha_fin_semana).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </>
+                    )}
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-[10px] sm:text-xs border-[#1F554A] text-[#1F554A]">
+                  {currentWeekIndex + 1}/{semanas.length}
+                </Badge>
+              </>
+            )}
           </div>
 
           <Button
             onClick={goToNextWeek}
-            disabled={currentWeekIndex <= 0}
+            disabled={isLoadingSemanas || currentWeekIndex <= 0}
             variant="ghost"
             size="sm"
             className="disabled:opacity-30 px-2 sm:px-3 hover:bg-[#1F554A]/10"
