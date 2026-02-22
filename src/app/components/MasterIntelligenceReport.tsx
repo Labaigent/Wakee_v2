@@ -6,10 +6,10 @@ import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, Tre
 import { Badge } from './ui/badge';
 import { CategoryTab } from './MasterReport/types';
 import { weeklyReports } from './MasterReport/data';
-import { CompanySignals } from './MasterReport/CompanySignals';
-import { MarketHooks } from './MasterReport/MarketHooks';
+import { SenalesMercado } from './MasterReport/SenalesMercado';
+import { GanchosMercado } from './MasterReport/GanchosMercado';
 
-export function MasterReport() {
+export function MasterIntelligenceReport() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [expandedSignals, setExpandedSignals] = useState<number[]>([]);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
@@ -167,7 +167,7 @@ export function MasterReport() {
 
       {/* Tab Content */}
       {activeTab === 'companies' && (
-        <CompanySignals
+        <SenalesMercado
           signals={currentReport.companySignals}
           expandedSignals={expandedSignals}
           onToggle={toggleSignal}
@@ -176,7 +176,7 @@ export function MasterReport() {
       )}
 
       {activeTab === 'market' && (
-        <MarketHooks hooks={currentReport.marketHooks} />
+        <GanchosMercado hooks={currentReport.marketHooks} />
       )}
 
       {/* Usage Guide */}

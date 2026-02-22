@@ -5,7 +5,7 @@ interface Props {
   hooks: MarketHook[];
 }
 
-export function MarketHooks({ hooks }: Props) {
+export function GanchosMercado({ hooks }: Props) {
   return (
     <div>
       <div className="mb-4 sm:mb-6">

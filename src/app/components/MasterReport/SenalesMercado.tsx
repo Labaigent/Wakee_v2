@@ -8,7 +8,7 @@ interface Props {
   formatDate: (dateString: string) => string;
 }
 
-export function CompanySignals({ signals, expandedSignals, onToggle, formatDate }: Props) {
+export function SenalesMercado({ signals, expandedSignals, onToggle, formatDate }: Props) {
   return (
     <div>
       <div className="mb-4 sm:mb-6">
