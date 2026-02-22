@@ -1,89 +1,66 @@
 import { supabase, isSupabaseAvailable } from './supabaseClient';
-import type { QuoteSummary } from '../types/quote';
-import type { Communication } from '../types/communication';
-import { transformConversationToQuoteSummary } from './quoteTransformers';
-import { transformEmailCommunication } from './communicationTransformers';
+import type { SenalMercado } from '../types/senalMercado';
 
 /**
- * Fetch all conversations from Supabase
+ * Fetch market signals for a given week from Supabase
  *
- * Purpose: Retrieves all conversation records from the database, ordered by most recent first.
- * Each conversation contains a complete quote workflow with user requirements and tool execution results.
+ * Purpose: Retrieves all `senales_mercado` records associated with a specific
+ * week, identified either by the week's numeric ID or its Monday date string.
+ * When `fechaLunes` is provided, a preliminary lookup against the `semanas`
+ * table resolves the numeric ID before querying `senales_mercado`.
  *
- * TODO: Add user filtering when username column is added to conversations table.
- * Future implementation will filter conversations by user_id to show only user's quotes.
+ * TODO: Add ordering parameter once display requirements are confirmed.
+ * Future: Accept a `limit` param when pagination is added to the Report view.
  *
- * @param {string} [userId] - Optional user ID for filtering (not yet implemented in database)
- * @returns {Promise<QuoteSummary[]>} Array of transformed quote summary objects
- * Returns empty array if Supabase is not available (graceful degradation)
+ * @param {{ semanaId: number }} params - Direct lookup by week ID
+ * @returns {Promise<SenalMercado[]>} Array of market signal records
+ * Returns empty array if Supabase is unavailable or no semana is found
  */
-export async function fetchAllConversations(_userId?: string): Promise<QuoteSummary[]> {
+export async function fetchSenalesMercado(params: { semanaId: number }): Promise<SenalMercado[]>;
+
+/**
+ * @param {{ fechaLunes: string }} params - Lookup by Monday date (e.g., '2026-02-10')
+ * @returns {Promise<SenalMercado[]>} Array of market signal records
+ * Returns empty array if Supabase is unavailable or no semana is found
+ */
+export async function fetchSenalesMercado(params: { fechaLunes: string }): Promise<SenalMercado[]>;
+
+export async function fetchSenalesMercado(
+  params: { semanaId?: number; fechaLunes?: string }
+): Promise<SenalMercado[]> {
   // Graceful degradation: return empty array if Supabase is not configured
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('[supabaseService] Supabase is not available - returning empty conversation list');
+    console.warn('[supabaseService] Supabase is not available - returning empty senales_mercado list');
     return [];
   }
 
   try {
-    // Query conversations table, filtered by company_id and ordered by most recent
-    const { data, error } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('company_id', 'LIG')
-      .order('last_update_at', { ascending: false });
+    let semanaId = params.semanaId;
 
-    if (error) {
-      console.error('[supabaseService] Error fetching conversations:', error);
-      throw error;
+    if (!semanaId) {
+      // Indirect path: resolve Monday date to semana ID via semanas table
+      const { data } = await supabase
+        .from('semanas')
+        .select('id')
+        .eq('fecha_inicio_semana', params.fechaLunes)
+        .maybeSingle();
+
+      if (!data) return [];
+      semanaId = data.id;
     }
 
-    // Transform raw database rows to UI-friendly format
-    const transformedQuotes = data?.map(transformConversationToQuoteSummary) || [];
-
-    return transformedQuotes;
-  } catch (error) {
-    console.error('[supabaseService] Failed to fetch conversations:', error);
-    throw new Error('Failed to retrieve quotes from database');
-  }
-}
-
-/**
- * Fetch all communications from Supabase
- *
- * Purpose: Retrieves all email communication records from the database, ordered by most recent first.
- * Each communication contains email details including sender, recipient, subject, body, and related quote.
- *
- * TODO: Add user filtering when user authentication is implemented.
- * Future: When user system is ready, call fetchAllCommunications(userId) to filter by user.
- *
- * @param {string} [userId] - Optional user ID for filtering (not yet implemented)
- * @returns {Promise<Communication[]>} Array of transformed communication objects
- * Returns empty array if Supabase is not available (graceful degradation)
- */
-export async function fetchAllCommunications(_userId?: string): Promise<Communication[]> {
-  // Graceful degradation: return empty array if Supabase is not configured
-  if (!isSupabaseAvailable() || !supabase) {
-    console.warn('[supabaseService] Supabase is not available - returning empty communications list');
-    return [];
-  }
-
-  try {
-    // Query email_communications table, ordered by most recent
-    // NOTE: No company_id column exists in this table, so no company filtering needed
+    // Query senales_mercado filtered by semana_id, ordered by creation date
     const { data, error } = await supabase
-      .from('email_communications')
+      .from('senales_mercado')
       .select('*')
-      .order('sent_at', { ascending: false });
+      .eq('semana_id', semanaId)
+      .order('fecha_creacion', { ascending: true });
 
-    if (error) {
-      console.error('[supabaseService] Error fetching communications:', error);
-      throw error;
-    }
+    if (error) throw error;
 
-    // Transform raw database rows to UI-friendly format
-    return data?.map(transformEmailCommunication) || [];
+    return data || [];
   } catch (error) {
-    console.error('[supabaseService] Failed to fetch communications:', error);
-    throw new Error('Failed to retrieve communications from database');
+    console.error('[supabaseService] Failed to fetch senales_mercado:', error);
+    throw new Error('Failed to retrieve market signals from database');
   }
 }
