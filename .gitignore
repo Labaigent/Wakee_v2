@@ -125,3 +125,7 @@ dist-ssr
 
 # OS Metadata
 Thumbs.db
+
+# AI Agents
+.claude/
+.cursor/
