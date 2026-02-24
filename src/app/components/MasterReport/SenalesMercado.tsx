@@ -1,14 +1,13 @@
-import { CompanySignal } from './types';
+import type { SenalMercado } from '../../../types/senalMercado';
 import { CompanySignalCard } from './components/CompanySignalCard';
 
 interface Props {
-  signals: CompanySignal[];
+  signals: SenalMercado[];
   expandedSignals: number[];
   onToggle: (id: number) => void;
-  formatDate: (dateString: string) => string;
 }
 
-export function SenalesMercado({ signals, expandedSignals, onToggle, formatDate }: Props) {
+export function SenalesMercado({ signals, expandedSignals, onToggle }: Props) {
   return (
     <div>
       <div className="mb-4 sm:mb-6">
@@ -23,7 +22,6 @@ export function SenalesMercado({ signals, expandedSignals, onToggle, formatDate 
             signal={signal}
             isExpanded={expandedSignals.includes(signal.id)}
             onToggle={() => onToggle(signal.id)}
-            formatDate={formatDate}
           />
         ))}
       </div>

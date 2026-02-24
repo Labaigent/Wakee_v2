@@ -1,15 +1,3 @@
-export interface CompanySignal {
-  id: number;
-  company: string;
-  signal: string;
-  description: string;
-  timing: string;
-  assetClass: string;
-  source: string;
-  sourceUrl: string;
-  date: string;
-}
-
 export interface MarketHook {
   id: number;
   topic: string;
@@ -22,8 +10,8 @@ export interface WeeklyReport {
   weekStart: string;
   weekEnd: string;
   lastUpdated: string;
-  companySignals: CompanySignal[];
+  companySignals: Record<string, unknown>[];
   marketHooks: MarketHook[];
 }
 
-export type CategoryTab = 'companies' | 'market';
+export type CategoryTab = 'senales' | 'ganchos';

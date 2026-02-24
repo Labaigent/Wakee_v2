@@ -1,27 +1,39 @@
-// Report
-import { Button } from './ui/button';
+// React
 import { useState, useEffect } from 'react';
+
+// External libraries
 import { toast } from 'sonner';
 import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, TrendingUp } from 'lucide-react';
+
+// Internal — services
+import { fetchSemanas, fetchSenalesMercado } from '../../services/supabaseService';
+
+// Internal — types
+import type { Semana } from '../../types/semana';
+import type { SenalMercado } from '../../types/senalMercado';
+import type { CategoryTab } from './MasterReport/types';
+
+// Internal — components & data
+import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { CategoryTab } from './MasterReport/types';
-import { weeklyReports } from './MasterReport/data'; // TODO: remove when content is connected to Supabase
 import { SenalesMercado } from './MasterReport/SenalesMercado';
 import { GanchosMercado } from './MasterReport/GanchosMercado';
-import { fetchSemanas } from '../../services/supabaseService';
-import type { Semana } from '../../types/semana';
+import { weeklyReports } from './MasterReport/data'; // TEMPORARY: remove when GanchosMercado connects to Supabase
 
 export function MasterIntelligenceReport() {
   // --- State ---
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
+  const [isLoadingSignals, setIsLoadingSignals] = useState(false);
   const [expandedSignals, setExpandedSignals] = useState<number[]>([]);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<CategoryTab>('companies');
+  const [activeTab, setActiveTab] = useState<CategoryTab>('senales');
   const [semanas, setSemanas] = useState<Semana[]>([]);
+  const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
 
-  const currentReport = weeklyReports[currentWeekIndex]; // TODO: remove when content is connected to Supabase
-  const currentSemana = semanas[currentWeekIndex];       // currentSemana.id → fetchSenalesMercado / fetchGanchosMercado
+  // Derived from state
+  const currentSemana = semanas[currentWeekIndex]; // drives fetchSenalesMercado + fetchGanchosMercado
+  const currentReport = weeklyReports[currentWeekIndex]; // TEMPORARY: remove when GanchosMercado connects to Supabase
 
   // --- Effects ---
   useEffect(() => {
@@ -33,17 +45,22 @@ export function MasterIntelligenceReport() {
       .catch(() => setIsLoadingSemanas(false));
   }, []);
 
+  // Re-fetch signals whenever the active week changes.
+  // Watching currentSemana?.id (not the object) avoids re-runs on unrelated reference updates.
+  useEffect(() => {
+    if (!currentSemana?.id) return;
+    setIsLoadingSignals(true);
+    fetchSenalesMercado({ semanaId: currentSemana.id })
+      .then(data => {
+        setSenalesMercado(data);
+        setIsLoadingSignals(false);
+      })
+      .catch(() => setIsLoadingSignals(false));
+  }, [currentSemana?.id]);
+
   // --- Helpers ---
   const formatSemanaLabel = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-
-  const formatSignalDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short'
-    });
-  };
 
   // --- Handlers ---
   const toggleSignal = (id: number) => {
@@ -77,7 +94,8 @@ export function MasterIntelligenceReport() {
 
   return (
     <div className="max-w-4xl space-y-6 sm:space-y-8">
-      {/* Header with Navigation */}
+
+      {/* Header */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -165,9 +183,9 @@ export function MasterIntelligenceReport() {
       <div className="border-b-2 border-[#DCDEDC]">
         <div className="flex gap-1 sm:gap-2">
           <button
-            onClick={() => setActiveTab('companies')}
+            onClick={() => setActiveTab('senales')}
             className={`flex items-center gap-2 px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all border-b-2 ${
-              activeTab === 'companies'
+              activeTab === 'senales'
                 ? 'border-[#1F554A] text-[#1F554A] bg-[#C4FF81]/5'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
@@ -175,15 +193,15 @@ export function MasterIntelligenceReport() {
             <Building2 className="size-4" />
             <span className="hidden sm:inline">Señales de Compañías</span>
             <span className="sm:hidden">Compañías</span>
-            <Badge className={`text-xs ${activeTab === 'companies' ? 'bg-[#1F554A] text-white' : 'bg-gray-200 text-gray-600'}`}>
-              {currentReport.companySignals.length}
+            <Badge className={`text-xs ${activeTab === 'senales' ? 'bg-[#1F554A] text-white' : 'bg-gray-200 text-gray-600'}`}>
+              {senalesMercado.length}
             </Badge>
           </button>
 
           <button
-            onClick={() => setActiveTab('market')}
+            onClick={() => setActiveTab('ganchos')}
             className={`flex items-center gap-2 px-4 sm:px-6 py-3 text-sm sm:text-base font-medium transition-all border-b-2 ${
-              activeTab === 'market'
+              activeTab === 'ganchos'
                 ? 'border-[#1F554A] text-[#1F554A] bg-[#C4FF81]/5'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
@@ -191,7 +209,7 @@ export function MasterIntelligenceReport() {
             <TrendingUp className="size-4" />
             <span className="hidden sm:inline">Ganchos de Mercado</span>
             <span className="sm:hidden">Mercado</span>
-            <Badge className={`text-xs ${activeTab === 'market' ? 'bg-[#1F554A] text-white' : 'bg-gray-200 text-gray-600'}`}>
+            <Badge className={`text-xs ${activeTab === 'ganchos' ? 'bg-[#1F554A] text-white' : 'bg-gray-200 text-gray-600'}`}>
               {currentReport.marketHooks.length}
             </Badge>
           </button>
@@ -199,16 +217,21 @@ export function MasterIntelligenceReport() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'companies' && (
-        <SenalesMercado
-          signals={currentReport.companySignals}
-          expandedSignals={expandedSignals}
-          onToggle={toggleSignal}
-          formatDate={formatSignalDate}
-        />
+      {activeTab === 'senales' && (
+        isLoadingSignals ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="size-6 animate-spin text-[#1F554A]" />
+          </div>
+        ) : (
+          <SenalesMercado
+            signals={senalesMercado}
+            expandedSignals={expandedSignals}
+            onToggle={toggleSignal}
+          />
+        )
       )}
 
-      {activeTab === 'market' && (
+      {activeTab === 'ganchos' && (
         <GanchosMercado hooks={currentReport.marketHooks} />
       )}
 
@@ -234,6 +257,7 @@ export function MasterIntelligenceReport() {
           </li>
         </ul>
       </div>
+
     </div>
   );
 }
