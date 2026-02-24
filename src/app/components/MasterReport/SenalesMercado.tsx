@@ -2,7 +2,7 @@
 import type { SenalMercado } from '../../../types/db/senalMercado';
 
 // Internal — components
-import { CompanySignalCard } from './components/CompanySignalCard';
+import { SenalMercadoCard } from './components/SenalMercadoCard';
 
 interface Props {
   /** Signals fetched from Supabase for the active week. */
@@ -34,7 +34,7 @@ export function SenalesMercado({ signals, expandedSignals, onToggle }: Props) {
       ) : (
         <div className="space-y-4 sm:space-y-6">
           {signals.map((signal) => (
-            <CompanySignalCard
+            <SenalMercadoCard
               key={signal.id}
               signal={signal}
               isExpanded={expandedSignals.includes(signal.id)}

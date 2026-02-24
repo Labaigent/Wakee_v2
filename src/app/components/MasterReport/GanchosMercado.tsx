@@ -2,7 +2,7 @@
 import type { GanchoMercado } from '../../../types/db/ganchoMercado';
 
 // Internal — components
-import { MarketHookCard } from './components/MarketHookCard';
+import { GanchoMercadoCard } from './components/GanchoMercadoCard';
 
 interface Props {
   /** Hooks fetched from Supabase for the active week. */
@@ -28,7 +28,7 @@ export function GanchosMercado({ hooks, expandedHooks, onToggle }: Props) {
       ) : (
         <div className="space-y-4 sm:space-y-6">
           {hooks.map((hook) => (
-            <MarketHookCard
+            <GanchoMercadoCard
               key={hook.id}
               hook={hook}
               isExpanded={expandedHooks.includes(hook.id)}

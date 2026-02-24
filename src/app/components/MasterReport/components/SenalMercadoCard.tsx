@@ -22,7 +22,7 @@ const formatDate = (dateString: string) =>
  * Displays a single market signal as an expandable card.
  * Expansion state is controlled externally — this component is purely presentational.
  */
-export function CompanySignalCard({ signal, isExpanded, onToggle }: Props) {
+export function SenalMercadoCard({ signal, isExpanded, onToggle }: Props) {
   // Boolean() makes the intent explicit: we only care whether content exists, not its value.
   const hasExpandedContent = Boolean(signal.detalles || signal.hipotesis_inmobiliaria);
 

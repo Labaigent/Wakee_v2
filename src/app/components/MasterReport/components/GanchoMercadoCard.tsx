@@ -27,7 +27,7 @@ const formatDate = (dateString: string) =>
  * Displays a single market hook as an expandable card.
  * Expansion state is controlled externally — this component is purely presentational.
  */
-export function MarketHookCard({ hook, isExpanded, onToggle }: Props) {
+export function GanchoMercadoCard({ hook, isExpanded, onToggle }: Props) {
   const keyPoints = parseKeyPoints(hook.key_points);
   // Boolean() makes the intent explicit: we only care whether content exists, not its value.
   const hasExpandedContent = Boolean(hook.detalles || hook.angulo_venta || hook.sectores_beneficiados);
