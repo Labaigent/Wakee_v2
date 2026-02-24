@@ -6,34 +6,36 @@ import { toast } from 'sonner';
 import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, TrendingUp } from 'lucide-react';
 
 // Internal — services
-import { fetchSemanas, fetchSenalesMercado } from '../../services/supabaseService';
+import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado } from '../../services/supabaseService';
 
 // Internal — types
 import type { Semana } from '../../types/db/semana';
 import type { SenalMercado } from '../../types/db/senalMercado';
+import type { GanchoMercado } from '../../types/db/ganchoMercado';
 import type { CategoryTab } from './MasterReport/types';
 
-// Internal — components & data
+// Internal — components
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { SenalesMercado } from './MasterReport/SenalesMercado';
 import { GanchosMercado } from './MasterReport/GanchosMercado';
-import { weeklyReports } from './MasterReport/data'; // TEMPORARY: remove when GanchosMercado connects to Supabase
 
 export function MasterIntelligenceReport() {
   // --- State ---
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
   const [isLoadingSignals, setIsLoadingSignals] = useState(false);
+  const [isLoadingHooks, setIsLoadingHooks] = useState(false);
   const [expandedSignals, setExpandedSignals] = useState<number[]>([]);
+  const [expandedHooks, setExpandedHooks] = useState<number[]>([]);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<CategoryTab>('senales');
   const [semanas, setSemanas] = useState<Semana[]>([]);
   const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
+  const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
 
   // Derived from state
   const currentSemana = semanas[currentWeekIndex]; // drives fetchSenalesMercado + fetchGanchosMercado
-  const currentReport = weeklyReports[currentWeekIndex]; // TEMPORARY: remove when GanchosMercado connects to Supabase
 
   // --- Effects ---
   useEffect(() => {
@@ -58,6 +60,18 @@ export function MasterIntelligenceReport() {
       .catch(() => setIsLoadingSignals(false));
   }, [currentSemana?.id]);
 
+  // Re-fetch hooks whenever the active week changes.
+  useEffect(() => {
+    if (!currentSemana?.id) return;
+    setIsLoadingHooks(true);
+    fetchGanchosMercado({ semanaId: currentSemana.id })
+      .then(data => {
+        setGanchosMercado(data);
+        setIsLoadingHooks(false);
+      })
+      .catch(() => setIsLoadingHooks(false));
+  }, [currentSemana?.id]);
+
   // --- Helpers ---
   const formatSemanaLabel = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -65,6 +79,12 @@ export function MasterIntelligenceReport() {
   // --- Handlers ---
   const toggleSignal = (id: number) => {
     setExpandedSignals(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleHook = (id: number) => {
+    setExpandedHooks(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -80,6 +100,7 @@ export function MasterIntelligenceReport() {
     if (currentWeekIndex < semanas.length - 1) {
       setCurrentWeekIndex(prev => prev + 1);
       setExpandedSignals([]);
+      setExpandedHooks([]);
       toast.info(`Semana del ${formatSemanaLabel(semanas[currentWeekIndex + 1]?.fecha_inicio_semana)}`);
     }
   };
@@ -88,6 +109,7 @@ export function MasterIntelligenceReport() {
     if (currentWeekIndex > 0) {
       setCurrentWeekIndex(prev => prev - 1);
       setExpandedSignals([]);
+      setExpandedHooks([]);
       toast.info(`Semana del ${formatSemanaLabel(semanas[currentWeekIndex - 1]?.fecha_inicio_semana)}`);
     }
   };
@@ -101,7 +123,7 @@ export function MasterIntelligenceReport() {
           <div>
             <h2 className="text-xl sm:text-2xl font-medium mb-2">Master Intelligence Report</h2>
             <p className="text-xs sm:text-sm text-gray-500">
-              Actualizado: {new Date(currentSemana?.fecha_creacion ?? currentReport.lastUpdated).toLocaleDateString('es-ES', {
+              Actualizado: {currentSemana?.fecha_creacion && new Date(currentSemana.fecha_creacion).toLocaleDateString('es-ES', {
                 day: 'numeric',
                 month: 'long',
                 hour: '2-digit',
@@ -210,7 +232,7 @@ export function MasterIntelligenceReport() {
             <span className="hidden sm:inline">Ganchos de Mercado</span>
             <span className="sm:hidden">Mercado</span>
             <Badge className={`text-xs ${activeTab === 'ganchos' ? 'bg-[#1F554A] text-white' : 'bg-gray-200 text-gray-600'}`}>
-              {currentReport.marketHooks.length}
+              {ganchosMercado.length}
             </Badge>
           </button>
         </div>
@@ -232,7 +254,17 @@ export function MasterIntelligenceReport() {
       )}
 
       {activeTab === 'ganchos' && (
-        <GanchosMercado hooks={currentReport.marketHooks} />
+        isLoadingHooks ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="size-6 animate-spin text-[#1F554A]" />
+          </div>
+        ) : (
+          <GanchosMercado
+            hooks={ganchosMercado}
+            expandedHooks={expandedHooks}
+            onToggle={toggleHook}
+          />
+        )
       )}
 
       {/* Usage Guide */}

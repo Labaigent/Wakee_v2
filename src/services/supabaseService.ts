@@ -1,5 +1,6 @@
 import { supabase, isSupabaseAvailable } from './supabaseClient';
 import type { SenalMercado } from '../types/db/senalMercado';
+import type { GanchoMercado } from '../types/db/ganchoMercado';
 import type { Semana } from '../types/db/semana';
 
 /**
@@ -63,6 +64,70 @@ export async function fetchSenalesMercado(
   } catch (error) {
     console.error('[supabaseService] Failed to fetch senales_mercado:', error);
     throw new Error('Failed to retrieve market signals from database');
+  }
+}
+
+/**
+ * Fetch market hooks for a given week from Supabase
+ *
+ * Purpose: Retrieves all `ganchos_mercado` records associated with a specific
+ * week, identified either by the week's numeric ID or its Monday date string.
+ * When `fechaLunes` is provided, a preliminary lookup against the `semanas`
+ * table resolves the numeric ID before querying `ganchos_mercado`.
+ *
+ * Note: `key_points` is stored as a JSON-serialized string — callers must
+ * parse it with JSON.parse() before rendering.
+ *
+ * @param {{ semanaId: number }} params - Direct lookup by week ID
+ * @returns {Promise<GanchoMercado[]>} Array of market hook records
+ * Returns empty array if Supabase is unavailable or no semana is found
+ */
+export async function fetchGanchosMercado(params: { semanaId: number }): Promise<GanchoMercado[]>;
+
+/**
+ * @param {{ fechaLunes: string }} params - Lookup by Monday date (e.g., '2026-02-10')
+ * @returns {Promise<GanchoMercado[]>} Array of market hook records
+ * Returns empty array if Supabase is unavailable or no semana is found
+ */
+export async function fetchGanchosMercado(params: { fechaLunes: string }): Promise<GanchoMercado[]>;
+
+export async function fetchGanchosMercado(
+  params: { semanaId?: number; fechaLunes?: string }
+): Promise<GanchoMercado[]> {
+  // Graceful degradation: return empty array if Supabase is not configured
+  if (!isSupabaseAvailable() || !supabase) {
+    console.warn('[supabaseService] Supabase is not available - returning empty ganchos_mercado list');
+    return [];
+  }
+
+  try {
+    let semanaId = params.semanaId;
+
+    if (!semanaId) {
+      // Indirect path: resolve Monday date to semana ID via semanas table
+      const { data } = await supabase
+        .from('semanas')
+        .select('id')
+        .eq('fecha_inicio_semana', params.fechaLunes)
+        .maybeSingle();
+
+      if (!data) return [];
+      semanaId = data.id;
+    }
+
+    // Query ganchos_mercado filtered by semana_id, ordered by creation date
+    const { data, error } = await supabase
+      .from('ganchos_mercado')
+      .select('*')
+      .eq('semana_id', semanaId)
+      .order('fecha_creacion', { ascending: true });
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error('[supabaseService] Failed to fetch ganchos_mercado:', error);
+    throw new Error('Failed to retrieve market hooks from database');
   }
 }
 
