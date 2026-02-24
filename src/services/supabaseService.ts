@@ -1,6 +1,6 @@
 import { supabase, isSupabaseAvailable } from './supabaseClient';
-import type { SenalMercado } from '../types/senalMercado';
-import type { Semana } from '../types/semana';
+import type { SenalMercado } from '../types/db/senalMercado';
+import type { Semana } from '../types/db/semana';
 
 /**
  * Fetch market signals for a given week from Supabase

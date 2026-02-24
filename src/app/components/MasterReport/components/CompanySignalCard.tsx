@@ -1,18 +1,30 @@
+// External libraries
 import { ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+
+// Internal — types
+import type { SenalMercado } from '../../../../types/db/senalMercado';
+
+// Internal — components
 import { Badge } from '../../ui/badge';
-import type { SenalMercado } from '../../../../types/senalMercado';
 
 interface Props {
   signal: SenalMercado;
   isExpanded: boolean;
+  /** No ID argument needed — the parent pre-binds the signal ID before passing this down. */
   onToggle: () => void;
 }
 
-export function CompanySignalCard({ signal, isExpanded, onToggle }: Props) {
-  const hasExpandedContent = signal.detalles || signal.hipotesis_inmobiliaria;
+// Pure utility — defined outside the component since it closes over no props or state.
+const formatDate = (dateString: string) =>
+  new Date(dateString).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
-  const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+/**
+ * Displays a single market signal as an expandable card.
+ * Expansion state is controlled externally — this component is purely presentational.
+ */
+export function CompanySignalCard({ signal, isExpanded, onToggle }: Props) {
+  // Boolean() makes the intent explicit: we only care whether content exists, not its value.
+  const hasExpandedContent = Boolean(signal.detalles || signal.hipotesis_inmobiliaria);
 
   return (
     <div className="border-2 border-[#DCDEDC] rounded-lg p-4 sm:p-5 hover:border-[#1F554A] transition-colors">

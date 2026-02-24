@@ -9,8 +9,8 @@ import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, Tre
 import { fetchSemanas, fetchSenalesMercado } from '../../services/supabaseService';
 
 // Internal — types
-import type { Semana } from '../../types/semana';
-import type { SenalMercado } from '../../types/senalMercado';
+import type { Semana } from '../../types/db/semana';
+import type { SenalMercado } from '../../types/db/senalMercado';
 import type { CategoryTab } from './MasterReport/types';
 
 // Internal — components & data
