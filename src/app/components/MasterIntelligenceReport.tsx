@@ -37,6 +37,8 @@ export function MasterIntelligenceReport() {
 
   // Derived from state
   const currentSemana = semanas[currentWeekIndex]; // drives fetchSenalesMercado + fetchGanchosMercado
+  // Refresh only makes sense on the latest week — triggering n8n on a past week would overwrite current data
+  const isLatestWeek = currentWeekIndex === 0;
 
   // --- Effects ---
   useEffect(() => {
@@ -137,7 +139,7 @@ export function MasterIntelligenceReport() {
               })}
             </p>
           </div>
-          <Button
+          {isLatestWeek && <Button
             onClick={handleRefresh}
             disabled={isRefreshing}
             variant="outline"
@@ -155,7 +157,7 @@ export function MasterIntelligenceReport() {
                 Actualizar
               </>
             )}
-          </Button>
+          </Button>}
         </div>
 
         {/* Week Navigation */}
