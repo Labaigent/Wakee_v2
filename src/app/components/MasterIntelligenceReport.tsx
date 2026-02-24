@@ -7,6 +7,7 @@ import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, Tre
 
 // Internal — services
 import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado } from '../../services/supabaseService';
+import { triggerMasterReportUpdate } from '../../services/n8nService';
 
 // Internal — types
 import type { Semana } from '../../types/db/semana';
@@ -91,9 +92,14 @@ export function MasterIntelligenceReport() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    toast.success('Reporte actualizado con datos recientes');
-    setIsRefreshing(false);
+    try {
+      await triggerMasterReportUpdate();
+      toast.success('Reporte actualizado con datos recientes');
+    } catch (error) {
+      toast.error('Error al actualizar. Intenta de nuevo.');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const goToPreviousWeek = () => {
