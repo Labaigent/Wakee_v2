@@ -6,7 +6,7 @@ import {
   TabsTrigger,
 } from "./components/ui/tabs";
 import { Dashboard } from "./components/Dashboard";
-import { NewSession } from "./components/NewSessionSection";
+import { NuevaSesion } from "./components/NuevaSesion/NuevaSesion";
 import { PendingTasks } from "./components/PendingTasks";
 import { SessionHistory } from "./components/SessionHistory";
 import { ActiveLeads } from "./components/ActiveLeads";
@@ -98,7 +98,7 @@ function App() {
             />
           </TabsContent>
           <TabsContent value="new-session" className="mt-0">
-            <NewSession
+            <NuevaSesion
               onComplete={() => setActiveTab("pending")}
             />
           </TabsContent>
