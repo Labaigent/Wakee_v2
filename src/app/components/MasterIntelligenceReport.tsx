@@ -95,9 +95,23 @@ export function MasterIntelligenceReport() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
+      // Wait for n8n to finish the full workflow before re-fetching — see n8nService.ts
       await triggerMasterReportUpdate();
+      // n8n confirmed DB is updated — re-fetch both datasets for the current week
+      setIsLoadingSignals(true);
+      setIsLoadingHooks(true);
+      const [signals, hooks] = await Promise.all([
+        fetchSenalesMercado({ semanaId: currentSemana.id }),
+        fetchGanchosMercado({ semanaId: currentSemana.id }),
+      ]);
+      setSenalesMercado(signals);
+      setGanchosMercado(hooks);
+      setIsLoadingSignals(false);
+      setIsLoadingHooks(false);
       toast.success('Reporte actualizado con datos recientes');
     } catch (error) {
+      setIsLoadingSignals(false);
+      setIsLoadingHooks(false);
       toast.error('Error al actualizar. Intenta de nuevo.');
     } finally {
       setIsRefreshing(false);
