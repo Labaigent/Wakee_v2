@@ -10,7 +10,7 @@ import { NewSession } from "./components/NewSessionSection";
 import { PendingTasks } from "./components/PendingTasks";
 import { SessionHistory } from "./components/SessionHistory";
 import { ActiveLeads } from "./components/ActiveLeads";
-import { MasterReport } from "./components/MasterReport";
+import { MasterIntelligenceReport } from "./components/MasterIntelligenceReport";
 import { Toaster } from "./components/ui/sonner";
 
 // App principal de Wakee - Prospección Inteligente C&W
@@ -112,7 +112,7 @@ function App() {
             <ActiveLeads />
           </TabsContent>
           <TabsContent value="report" className="mt-0">
-            <MasterReport />
+            <MasterIntelligenceReport />
           </TabsContent>
         </Tabs>
       </main>
