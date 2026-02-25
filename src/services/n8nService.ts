@@ -9,8 +9,7 @@
  */
 
 /** Webhook URL for triggering the Master Intelligence Report update workflow */
-const MASTER_REPORT_WEBHOOK_URL =
-  'https://camilov.app.n8n.cloud/webhook-test/824981e2-6004-4431-a1d6-bf8045b640db';
+const MASTER_REPORT_WEBHOOK_URL = import.meta.env.VITE_N8N_MASTER_REPORT_WEBHOOK_URL;
 
 /**
  * Trigger the Master Intelligence Report update workflow in n8n
