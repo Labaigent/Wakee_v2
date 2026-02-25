@@ -10,7 +10,7 @@ import { NuevaSesion } from "./components/NuevaSesion/NuevaSesion";
 import { PendingTasks } from "./components/PendingTasks";
 import { SessionHistory } from "./components/SessionHistory";
 import { ActiveLeads } from "./components/ActiveLeads";
-import { MasterIntelligenceReport } from "./components/MasterIntelligenceReport";
+import { MasterIntelligenceReport } from "./components/MasterReport/MasterIntelligenceReport";
 import { Toaster } from "./components/ui/sonner";
 
 // App principal de Wakee - Prospección Inteligente C&W

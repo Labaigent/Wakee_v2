@@ -6,20 +6,20 @@ import { toast } from 'sonner';
 import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, TrendingUp } from 'lucide-react';
 
 // Internal — services
-import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado } from '../../services/supabaseService';
-import { triggerMasterReportUpdate } from '../../services/n8nService';
+import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado } from '../../../services/supabaseService';
+import { triggerMasterReportUpdate } from '../../../services/n8nService';
 
 // Internal — types
-import type { Semana } from '../../types/db/semana';
-import type { SenalMercado } from '../../types/db/senalMercado';
-import type { GanchoMercado } from '../../types/db/ganchoMercado';
-import type { CategoryTab } from './MasterReport/types';
+import type { Semana } from '../../../types/db/semana';
+import type { SenalMercado } from '../../../types/db/senalMercado';
+import type { GanchoMercado } from '../../../types/db/ganchoMercado';
+import type { CategoryTab } from './types';
 
 // Internal — components
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { SenalesMercado } from './MasterReport/SenalesMercado';
-import { GanchosMercado } from './MasterReport/GanchosMercado';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { SenalesMercado } from './SenalesMercado';
+import { GanchosMercado } from './GanchosMercado';
 
 export function MasterIntelligenceReport() {
   // --- State ---
