@@ -25,20 +25,20 @@ export function MasterIntelligenceReport() {
   // --- State ---
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
-  const [isLoadingSignals, setIsLoadingSignals] = useState(false);
-  const [isLoadingHooks, setIsLoadingHooks] = useState(false);
-  const [expandedSignals, setExpandedSignals] = useState<number[]>([]);
-  const [expandedHooks, setExpandedHooks] = useState<number[]>([]);
-  const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+  const [cargandoSeñales, setCargandoSeñales] = useState(false);
+  const [cargandoGanchos, setCargandoGanchos] = useState(false);
+  const [expandedSeñales, setExpandedSeñales] = useState<number[]>([]);
+  const [expandedGanchos, setExpandedGanchos] = useState<number[]>([]);
+  const [indiceSemana, setIndiceSemana] = useState(0);
   const [activeTab, setActiveTab] = useState<CategoryTab>('senales');
   const [semanas, setSemanas] = useState<Semana[]>([]);
   const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
   const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
 
   // Derived from state
-  const currentSemana = semanas[currentWeekIndex]; // drives fetchSenalesMercado + fetchGanchosMercado
+  const currentSemana = semanas[indiceSemana]; // drives fetchSenalesMercado + fetchGanchosMercado
   // Refresh only makes sense on the latest week — triggering n8n on a past week would overwrite current data
-  const isLatestWeek = currentWeekIndex === 0;
+  const isLatestWeek = indiceSemana === 0;
 
   // --- Effects ---
   useEffect(() => {
@@ -54,25 +54,25 @@ export function MasterIntelligenceReport() {
   // Watching currentSemana?.id (not the object) avoids re-runs on unrelated reference updates.
   useEffect(() => {
     if (!currentSemana?.id) return;
-    setIsLoadingSignals(true);
+    setCargandoSeñales(true);
     fetchSenalesMercado({ semanaId: currentSemana.id })
       .then(data => {
         setSenalesMercado(data);
-        setIsLoadingSignals(false);
+        setCargandoSeñales(false);
       })
-      .catch(() => setIsLoadingSignals(false));
+      .catch(() => setCargandoSeñales(false));
   }, [currentSemana?.id]);
 
-  // Re-fetch hooks whenever the active week changes.
+  // Re-fetch ganchos whenever the active week changes.
   useEffect(() => {
     if (!currentSemana?.id) return;
-    setIsLoadingHooks(true);
+    setCargandoGanchos(true);
     fetchGanchosMercado({ semanaId: currentSemana.id })
       .then(data => {
         setGanchosMercado(data);
-        setIsLoadingHooks(false);
+        setCargandoGanchos(false);
       })
-      .catch(() => setIsLoadingHooks(false));
+      .catch(() => setCargandoGanchos(false));
   }, [currentSemana?.id]);
 
   // --- Helpers ---
@@ -80,14 +80,14 @@ export function MasterIntelligenceReport() {
     new Date(dateStr).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
 
   // --- Handlers ---
-  const toggleSignal = (id: number) => {
-    setExpandedSignals(prev =>
+  const toggleSeñal = (id: number) => {
+    setExpandedSeñales(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
 
-  const toggleHook = (id: number) => {
-    setExpandedHooks(prev =>
+  const toggleGancho = (id: number) => {
+    setExpandedGanchos(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
@@ -96,22 +96,25 @@ export function MasterIntelligenceReport() {
     setIsRefreshing(true);
     try {
       // Wait for n8n to finish the full workflow before re-fetching — see n8nService.ts
+      
+      setCargandoSeñales(true);
+      setCargandoGanchos(true);
       await triggerMasterReportUpdate();
+
       // n8n confirmed DB is updated — re-fetch both datasets for the current week
-      setIsLoadingSignals(true);
-      setIsLoadingHooks(true);
-      const [signals, hooks] = await Promise.all([
+
+      const [señales, ganchos] = await Promise.all([
         fetchSenalesMercado({ semanaId: currentSemana.id }),
         fetchGanchosMercado({ semanaId: currentSemana.id }),
       ]);
-      setSenalesMercado(signals);
-      setGanchosMercado(hooks);
-      setIsLoadingSignals(false);
-      setIsLoadingHooks(false);
+      setSenalesMercado(señales);
+      setGanchosMercado(ganchos);
+      setCargandoSeñales(false);
+      setCargandoGanchos(false);
       toast.success('Reporte actualizado con datos recientes');
     } catch (error) {
-      setIsLoadingSignals(false);
-      setIsLoadingHooks(false);
+      setCargandoSeñales(false);
+      setCargandoGanchos(false);
       toast.error('Error al actualizar. Intenta de nuevo.');
     } finally {
       setIsRefreshing(false);
@@ -119,20 +122,20 @@ export function MasterIntelligenceReport() {
   };
 
   const goToPreviousWeek = () => {
-    if (currentWeekIndex < semanas.length - 1) {
-      setCurrentWeekIndex(prev => prev + 1);
-      setExpandedSignals([]);
-      setExpandedHooks([]);
-      toast.info(`Semana del ${formatSemanaLabel(semanas[currentWeekIndex + 1]?.fecha_inicio_semana)}`);
+    if (indiceSemana < semanas.length - 1) {
+      setIndiceSemana(prev => prev + 1);
+      setExpandedSeñales([]);
+      setExpandedGanchos([]);
+      toast.info(`Semana del ${formatSemanaLabel(semanas[indiceSemana + 1]?.fecha_inicio_semana)}`);
     }
   };
 
   const goToNextWeek = () => {
-    if (currentWeekIndex > 0) {
-      setCurrentWeekIndex(prev => prev - 1);
-      setExpandedSignals([]);
-      setExpandedHooks([]);
-      toast.info(`Semana del ${formatSemanaLabel(semanas[currentWeekIndex - 1]?.fecha_inicio_semana)}`);
+    if (indiceSemana > 0) {
+      setIndiceSemana(prev => prev - 1);
+      setExpandedSeñales([]);
+      setExpandedGanchos([]);
+      toast.info(`Semana del ${formatSemanaLabel(semanas[indiceSemana - 1]?.fecha_inicio_semana)}`);
     }
   };
 
@@ -178,7 +181,7 @@ export function MasterIntelligenceReport() {
         <div className="flex items-center justify-between sm:justify-center gap-2 sm:gap-4 py-3 sm:py-4 bg-[#C4FF81]/10 rounded-lg border-2 border-[#DCDEDC]">
           <Button
             onClick={goToPreviousWeek}
-            disabled={isLoadingSemanas || currentWeekIndex >= semanas.length - 1}
+            disabled={isLoadingSemanas || indiceSemana >= semanas.length - 1}
             variant="ghost"
             size="sm"
             className="disabled:opacity-30 px-2 sm:px-3 hover:bg-[#1F554A]/10"
@@ -205,7 +208,7 @@ export function MasterIntelligenceReport() {
                   </p>
                 </div>
                 <Badge variant="outline" className="text-[10px] sm:text-xs border-[#1F554A] text-[#1F554A]">
-                  {currentWeekIndex + 1}/{semanas.length}
+                  {indiceSemana + 1}/{semanas.length}
                 </Badge>
               </>
             )}
@@ -213,7 +216,7 @@ export function MasterIntelligenceReport() {
 
           <Button
             onClick={goToNextWeek}
-            disabled={isLoadingSemanas || currentWeekIndex <= 0}
+            disabled={isLoadingSemanas || indiceSemana <= 0}
             variant="ghost"
             size="sm"
             className="disabled:opacity-30 px-2 sm:px-3 hover:bg-[#1F554A]/10"
@@ -262,29 +265,29 @@ export function MasterIntelligenceReport() {
 
       {/* Tab Content */}
       {activeTab === 'senales' && (
-        isLoadingSignals ? (
+        cargandoSeñales ? (
           <div className="flex justify-center py-12">
             <Loader2 className="size-6 animate-spin text-[#1F554A]" />
           </div>
         ) : (
           <SenalesMercado
-            signals={senalesMercado}
-            expandedSignals={expandedSignals}
-            onToggle={toggleSignal}
+            señales={senalesMercado}
+            expandedSeñales={expandedSeñales}
+            onToggle={toggleSeñal}
           />
         )
       )}
 
       {activeTab === 'ganchos' && (
-        isLoadingHooks ? (
+        cargandoGanchos ? (
           <div className="flex justify-center py-12">
             <Loader2 className="size-6 animate-spin text-[#1F554A]" />
           </div>
         ) : (
           <GanchosMercado
-            hooks={ganchosMercado}
-            expandedHooks={expandedHooks}
-            onToggle={toggleHook}
+            ganchos={ganchosMercado}
+            expandedGanchos={expandedGanchos}
+            onToggle={toggleGancho}
           />
         )
       )}
