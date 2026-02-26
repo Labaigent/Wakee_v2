@@ -1,12 +1,17 @@
 // React
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // External libraries
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 // Internal — types
-import type { CompanySignal, MarketHook } from './types';
+import type { Semana } from '../../../types/db/semana';
+import type { SenalMercado } from '../../../types/db/senalMercado';
+import type { GanchoMercado } from '../../../types/db/ganchoMercado';
+
+// Internal — services
+import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado } from '../../../services/supabaseService';
 
 // Internal — components
 import { Button } from "../ui/button";
@@ -34,7 +39,7 @@ interface NuevaSesionProps {
  * Consists of a form for broker information and a read-only market context section.
  */
 export function NuevaSesion({ onComplete }: NuevaSesionProps) {
-  // --- State ---
+  // --- State (form) ---
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     brokerName: "",
@@ -43,57 +48,41 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
     additionalContext: "",
   });
 
-  // Mock data del Master Report - semana actual
-  // TODO: In the future, these could be fetched from the service layer similar to MasterIntelligenceReport
-  const companySignals: CompanySignal[] = [
-    {
-      id: "sig-1",
-      company: "Amazon México",
-      signal: "Expansión de centros de distribución - 3 nuevos fulfillment centers",
-      assetClass: "Industrial",
-    },
-    {
-      id: "sig-2",
-      company: "Mercado Libre",
-      signal: "Inversión $200M USD en infraestructura logística",
-      assetClass: "Industrial",
-    },
-    {
-      id: "sig-3",
-      company: "HSBC México",
-      signal: "Consolidación de 5 edificios en 2 hubs premium con LEED",
-      assetClass: "Oficinas",
-    },
-    {
-      id: "sig-4",
-      company: "FEMSA (Oxxo)",
-      signal: "12 centros de distribución urbanos en ciudades medias",
-      assetClass: "Industrial",
-    },
-  ];
+  // --- State (data layer) ---
+  const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
+  const [cargandoSeñales, setCargandoSeñales] = useState(false);
+  const [cargandoGanchos, setCargandoGanchos] = useState(false);
+  const [semanas, setSemanas] = useState<Semana[]>([]);
+  const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
+  const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
 
-  const marketHooks: MarketHook[] = [
-    {
-      id: "hook-1",
-      topic: "Nearshoring",
-      hook: "Demanda industrial +45% YoY, ocupación 95% en corredores principales",
-    },
-    {
-      id: "hook-2",
-      topic: "Trabajo Híbrido",
-      hook: "Footprint -30%, pero renta premium +15%",
-    },
-    {
-      id: "hook-3",
-      topic: "Tasas de Interés",
-      hook: "Banxico 11%, expectativa 9.5% H2 2026. Arrendamientos activos",
-    },
-    {
-      id: "hook-4",
-      topic: "E-commerce",
-      hook: "Crecimiento 23% YoY, demanda micro-fulfillment +60%",
-    },
-  ];
+  // NuevaSesion siempre muestra la semana más reciente (sin navegación).
+  const currentSemana = semanas[0];
+
+  // Carga semanas disponibles al montar — solo usamos semanas[0] (la más reciente).
+  useEffect(() => {
+    fetchSemanas()
+      .then(data => { setSemanas(data); setIsLoadingSemanas(false); })
+      .catch(() => setIsLoadingSemanas(false));
+  }, []);
+
+  // Re-fetcha señales cuando resuelve la semana activa.
+  useEffect(() => {
+    if (!currentSemana?.id) return;
+    setCargandoSeñales(true);
+    fetchSenalesMercado({ semanaId: currentSemana.id })
+      .then(data => { setSenalesMercado(data); setCargandoSeñales(false); })
+      .catch(() => setCargandoSeñales(false));
+  }, [currentSemana?.id]);
+
+  // Re-fetcha ganchos cuando resuelve la semana activa.
+  useEffect(() => {
+    if (!currentSemana?.id) return;
+    setCargandoGanchos(true);
+    fetchGanchosMercado({ semanaId: currentSemana.id })
+      .then(data => { setGanchosMercado(data); setCargandoGanchos(false); })
+      .catch(() => setCargandoGanchos(false));
+  }, [currentSemana?.id]);
 
   // --- Helpers ---
   const isValid =
@@ -280,7 +269,13 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
                   Contexto de Mercado
                 </h3>
                 <p className="text-xs text-gray-500 mt-1">
-                  Semana del 10 de Febrero, 2026
+                  {isLoadingSemanas ? (
+                    <Loader2 className="size-3 animate-spin text-[#1F554A] inline" />
+                  ) : currentSemana ? (
+                    `Semana del ${new Date(currentSemana.fecha_inicio_semana + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                  ) : (
+                    'Sin datos disponibles'
+                  )}
                 </p>
               </div>
             </div>
@@ -290,9 +285,21 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
             </p>
 
             <div className="space-y-6 max-h-[calc(100vh-16rem)] overflow-y-auto pr-2">
-              <SenalesMercado signals={companySignals} />
-              
-              <GanchosMercado hooks={marketHooks} />
+              {cargandoSeñales ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="size-5 animate-spin text-[#1F554A]" />
+                </div>
+              ) : (
+                <SenalesMercado señales={senalesMercado} />
+              )}
+
+              {cargandoGanchos ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="size-5 animate-spin text-[#1F554A]" />
+                </div>
+              ) : (
+                <GanchosMercado ganchos={ganchosMercado} />
+              )}
 
               {/* Info Footer */}
               <div className="bg-[#C4FF81]/10 border-2 border-[#DCDEDC] rounded-lg p-4">
