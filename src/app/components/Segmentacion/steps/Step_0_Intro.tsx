@@ -1,3 +1,4 @@
+// Internal — components
 import { Button } from '../../ui/button';
 
 interface StepIntroProps {
@@ -9,11 +10,13 @@ interface StepIntroProps {
 export function StepIntro({ title, phase, onStartWizard }: StepIntroProps) {
   return (
     <div className="space-y-6 sm:space-y-8">
+      {/* Header */}
       <div>
         <h3 className="text-xl sm:text-2xl font-medium mb-2 text-[#141414]">{title}</h3>
         <p className="text-sm sm:text-base text-gray-600">{phase}</p>
       </div>
 
+      {/* Card: flujo y CTA */}
       <div className="border-2 border-[#1F554A] rounded-lg p-6 sm:p-8 bg-gradient-to-br from-white to-[#C4FF81]/5">
         <div className="text-center space-y-6">
           <div className="inline-flex items-center justify-center size-16 rounded-full bg-[#1F554A] text-white mb-2">

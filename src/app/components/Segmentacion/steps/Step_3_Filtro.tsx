@@ -1,7 +1,10 @@
-import { Button } from '../../ui/button';
-import { Separator } from '../../ui/separator';
+// External libraries
 import { toast } from 'sonner';
 import { ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+
+// Internal — components
+import { Button } from '../../ui/button';
+import { Separator } from '../../ui/separator';
 
 interface StepFiltroProps {
   onConfirm: () => void;
@@ -9,6 +12,7 @@ interface StepFiltroProps {
 }
 
 export function StepFiltro({ onConfirm, onBack }: StepFiltroProps) {
+  // --- Handlers ---
   const handleConfirm = async () => {
     toast.success('Continuando con búsqueda...');
     onConfirm();
@@ -16,11 +20,13 @@ export function StepFiltro({ onConfirm, onBack }: StepFiltroProps) {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h3 className="text-lg sm:text-xl font-medium mb-2">Accede a LinkedIn Sales Navigator</h3>
         <p className="text-sm text-gray-600">Wakee configurará la búsqueda automáticamente en Sales Navigator</p>
       </div>
 
+      {/* CTA Sales Navigator */}
       <div className="bg-[#C4FF81]/10 border-2 border-[#1F554A] rounded-lg p-6">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
@@ -46,6 +52,7 @@ export function StepFiltro({ onConfirm, onBack }: StepFiltroProps) {
         </div>
       </div>
 
+      {/* Aviso proceso automático */}
       <div className="bg-[#DCDEDC]/30 border border-[#DCDEDC] rounded-lg p-4">
         <div className="flex gap-3">
           <AlertCircle className="size-5 text-[#1F554A] flex-shrink-0" />
@@ -59,6 +66,7 @@ export function StepFiltro({ onConfirm, onBack }: StepFiltroProps) {
       </div>
 
       <Separator />
+      {/* Actions */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
           <ArrowLeft className="size-4 mr-2" />

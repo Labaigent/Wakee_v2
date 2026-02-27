@@ -1,7 +1,14 @@
+// React
 import { useState, useCallback } from 'react';
+
+// External libraries
 import { toast } from 'sonner';
-import type { SegmentacionStep } from './segmentacionSteps';
-import { getStepIndex } from './segmentacionSteps';
+
+// Internal — types
+import type { SegmentacionStep } from './types';
+import { getStepIndex } from './types';
+
+// Internal — components
 import { SegmentacionStepNav } from './SegmentacionStepNav';
 import { StepIntro } from './steps/Step_0_Intro';
 import { StepIcp } from './steps/Step_1_Icp';
@@ -15,23 +22,18 @@ import { StepMensajes } from './steps/Step_7_Mensajes';
 const SESSION_ID = 'session-001';
 
 export function Segmentacion() {
+  // --- State ---
   const [currentStep, setCurrentStep] = useState<SegmentacionStep>('intro');
   const [maxReachedStep, setMaxReachedStep] = useState<SegmentacionStep>('intro');
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
-
-  // Estado para pasos ICP → Búsqueda (reutilizado por StepIcp, StepPersona, StepFiltro, StepBusqueda)
+  // Estado compartido por pasos ICP → Búsqueda (StepIcp, StepPersona, StepFiltro, StepBusqueda)
   const [selectedIcp, setSelectedIcp] = useState('');
   const [expandedIcp, setExpandedIcp] = useState<string | null>(null);
   const [personaEdits, setPersonaEdits] = useState('');
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingStatus, setProcessingStatus] = useState('');
 
-  const updateMaxReached = useCallback((step: SegmentacionStep) => {
-    setMaxReachedStep((prev) =>
-      getStepIndex(step) > getStepIndex(prev) ? step : prev
-    );
-  }, []);
-
+  // Mock: una sola tarea de estrategia para el flujo actual
   const pendingTasks = [
     {
       id: 'task-e3-001',
@@ -44,6 +46,14 @@ export function Segmentacion() {
     },
   ];
 
+  // --- Helpers ---
+  const updateMaxReached = useCallback((step: SegmentacionStep) => {
+    setMaxReachedStep((prev) =>
+      getStepIndex(step) > getStepIndex(prev) ? step : prev
+    );
+  }, []);
+
+  // --- Handlers ---
   const handleStartWizard = () => {
     setSelectedLeads([]);
     setSelectedIcp('');
@@ -77,12 +87,18 @@ export function Segmentacion() {
 
   return (
     <div className="space-y-12">
+
+      {/* Header */}
       <div>
-        <h2 className="text-2xl font-medium mb-2">Segmentaciones Pendientes</h2>
-        <p className="text-gray-600">{pendingTasks.length} segmentaciones requieren tu decisión</p>
+        <h2 className="text-xl sm:text-2xl font-medium mb-2">Segmentaciones Pendientes</h2>
+        <p className="text-xs sm:text-sm text-gray-500">
+          {pendingTasks.length} segmentaciones requieren tu decisión
+        </p>
       </div>
 
       <div className="max-w-5xl mx-auto space-y-6">
+
+        {/* Step navigation — oculto en intro */}
         {currentStep !== 'intro' && (
           <SegmentacionStepNav
             currentStep={currentStep}
@@ -91,6 +107,7 @@ export function Segmentacion() {
           />
         )}
 
+        {/* Step content */}
         {currentStep === 'intro' && (
           <StepIntro
             title={pendingTasks[0].title}
@@ -183,6 +200,7 @@ export function Segmentacion() {
             onComplete={handleMensajesComplete}
           />
         )}
+
       </div>
     </div>
   );

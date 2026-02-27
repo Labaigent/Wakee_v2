@@ -1,20 +1,27 @@
+// React
 import { useState, useEffect } from 'react';
+
+// External libraries
+import { toast } from 'sonner';
+import {
+  Copy,
+  Check,
+  Mail,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
+
+// Internal — components
 import { Button } from '../../ui/button';
 import { Textarea } from '../../ui/textarea';
 import { Input } from '../../ui/input';
 import { Badge } from '../../ui/badge';
 import { Label } from '../../ui/label';
 import { Progress } from '../../ui/progress';
-import { toast } from 'sonner';
+
+// Internal — utils
 import { copyToClipboard } from '../../../utils/clipboard';
-import { 
-  Copy,
-  Check,
-  Mail,
-  Sparkles,
-  ChevronDown,
-  ChevronUp
-} from 'lucide-react';
 
 interface EmailDraft {
   id: string;
@@ -32,6 +39,7 @@ interface StepMensajesProps {
 }
 
 export function StepMensajes({ onComplete }: StepMensajesProps) {
+  // --- State ---
   const [isGenerating, setIsGenerating] = useState(true);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStatus, setGenerationStatus] = useState('');
@@ -40,7 +48,7 @@ export function StepMensajes({ onComplete }: StepMensajesProps) {
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [emailDrafts, setEmailDrafts] = useState<EmailDraft[]>([]);
 
-  // Simular generación de correos (E10+E11)
+  // Simulación generación de correos (E10+E11)
   useEffect(() => {
     const generateEmails = async () => {
       const stages = [
@@ -197,6 +205,7 @@ Cushman & Wakefield Colombia`
     generateEmails();
   }, []);
 
+  // --- Handlers ---
   const handleRetry = () => {
     setIsGenerating(true);
     setGenerationFailed(false);

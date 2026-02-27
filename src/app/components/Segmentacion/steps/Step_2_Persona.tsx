@@ -1,9 +1,14 @@
+// External libraries
+import { toast } from 'sonner';
+import { ArrowRight, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+
+// Internal — components
 import { Button } from '../../ui/button';
 import { Label } from '../../ui/label';
 import { Textarea } from '../../ui/textarea';
 import { Separator } from '../../ui/separator';
-import { toast } from 'sonner';
-import { ArrowRight, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+
+// Internal — data
 import { buyerPersona } from '../wizardData';
 
 interface StepPersonaProps {
@@ -19,6 +24,7 @@ export function StepPersona({
   onConfirm,
   onBack,
 }: StepPersonaProps) {
+  // --- Handlers ---
   const handleConfirm = () => {
     toast.success('Buyer Persona validado');
     onConfirm();
@@ -26,11 +32,13 @@ export function StepPersona({
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h3 className="text-lg sm:text-xl font-medium mb-2">Valida el Buyer Persona</h3>
         <p className="text-sm text-gray-600">Revisa y ajusta el perfil del tomador de decisiones</p>
       </div>
 
+      {/* Resumen persona */}
       <div className="space-y-4 border rounded-lg p-4 sm:p-6 bg-gray-50">
         <div>
           <p className="text-sm text-gray-500 mb-1">Título / Rol</p>
@@ -92,6 +100,7 @@ export function StepPersona({
           </ul>
         </div>
       </div>
+      {/* Ajustes opcionales */}
       <div>
         <Label className="text-sm mb-2 block">Ajustes o comentarios (opcional)</Label>
         <Textarea
@@ -102,6 +111,7 @@ export function StepPersona({
         />
       </div>
       <Separator />
+      {/* Actions */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
           <ArrowLeft className="size-4 mr-2" />

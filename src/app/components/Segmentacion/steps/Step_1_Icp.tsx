@@ -1,9 +1,14 @@
+// External libraries
+import { toast } from 'sonner';
+import { ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+
+// Internal — components
 import { Button } from '../../ui/button';
 import { RadioGroup, RadioGroupItem } from '../../ui/radio-group';
 import { Label } from '../../ui/label';
 import { Separator } from '../../ui/separator';
-import { toast } from 'sonner';
-import { ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+
+// Internal — data
 import { icpOptions } from '../wizardData';
 
 interface StepIcpProps {
@@ -23,6 +28,7 @@ export function StepIcp({
   onConfirm,
   onCancel,
 }: StepIcpProps) {
+  // --- Handlers ---
   const handleConfirm = () => {
     if (!selectedIcp) {
       toast.error('Selecciona un ICP');
@@ -34,11 +40,13 @@ export function StepIcp({
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h3 className="text-lg sm:text-xl font-medium mb-2">Selecciona tu ICP</h3>
         <p className="text-sm text-gray-600">Elige el perfil de cliente ideal que mejor se alinea con tu estrategia</p>
       </div>
 
+      {/* Lista de ICPs */}
       <RadioGroup value={selectedIcp} onValueChange={onSelectedIcpChange}>
         <div className="space-y-4">
           {icpOptions.map((icp) => {
@@ -138,6 +146,7 @@ export function StepIcp({
       </RadioGroup>
 
       <Separator />
+      {/* Actions */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={onCancel}>
           Cancelar

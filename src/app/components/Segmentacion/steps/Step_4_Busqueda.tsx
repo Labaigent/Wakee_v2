@@ -1,6 +1,9 @@
+// React
 import { useEffect } from 'react';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+
+// External libraries
 import { toast } from 'sonner';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 
 interface StepBusquedaProps {
   processingProgress: number;
@@ -23,7 +26,7 @@ export function StepBusqueda({
   onProgress,
   onComplete,
 }: StepBusquedaProps) {
-  // Ejecutar simulación solo al montar si el progreso aún no está al 100% (p. ej. al volver desde ranking no se re-ejecuta)
+  // --- Effect: simulación de búsqueda al montar (si progreso < 100; al volver desde ranking no se re-ejecuta) ---
   useEffect(() => {
     if (processingProgress >= 100) return;
 
@@ -48,6 +51,7 @@ export function StepBusqueda({
 
   return (
     <div className="py-12 space-y-8">
+      {/* Progreso y barra */}
       <div className="text-center max-w-md mx-auto space-y-6">
         <div className="flex justify-center">
           <Loader2 className="size-12 animate-spin text-[#1F554A]" />
@@ -65,6 +69,7 @@ export function StepBusqueda({
           </div>
           <p className="text-sm text-gray-600">{processingProgress}%</p>
         </div>
+        {/* Checklist de etapas */}
         <div className="border-2 border-[#DCDEDC] rounded-lg p-4 sm:p-6 bg-white text-left">
           <h3 className="text-sm font-medium text-[#141414] mb-4 uppercase tracking-wide">Proceso de Búsqueda</h3>
           <div className="space-y-3">

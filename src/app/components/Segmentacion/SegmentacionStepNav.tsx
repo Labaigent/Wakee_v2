@@ -5,7 +5,7 @@ import {
   SEGMENTACION_STEP_LABELS,
   getStepIndex,
   isStepUnlocked,
-} from './segmentacionSteps';
+} from './types';
 
 interface SegmentacionStepNavProps {
   currentStep: SegmentacionStep;

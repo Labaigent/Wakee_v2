@@ -1,16 +1,21 @@
+// React
 import { useState } from 'react';
-import { Button } from '../../ui/button';
-import { Checkbox } from '../../ui/checkbox';
-import { Badge } from '../../ui/badge';
+
+// External libraries
 import { toast } from 'sonner';
-import { 
+import {
   Loader2,
   CheckCircle2,
   Building2,
   Briefcase,
   TrendingUp,
-  MapPin
+  MapPin,
 } from 'lucide-react';
+
+// Internal — components
+import { Button } from '../../ui/button';
+import { Checkbox } from '../../ui/checkbox';
+import { Badge } from '../../ui/badge';
 
 interface Lead {
   id: string;
@@ -38,13 +43,14 @@ interface StepRankingProps {
 }
 
 export function StepRanking({ onComplete }: StepRankingProps) {
+  // --- State ---
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingStatus, setProcessingStatus] = useState('');
   const [showProcessing, setShowProcessing] = useState(false);
 
-  // Mock data - esto vendría de E8
+  // Mock: datos vendrían de E8
   const leads: Lead[] = [
     {
       id: 'lead-1',
@@ -145,6 +151,14 @@ export function StepRanking({ onComplete }: StepRankingProps) {
     }))
   ];
 
+  // --- Helpers ---
+  const getScoreColor = (score: number) => {
+    if (score >= 85) return 'text-[#1F554A] bg-[#C4FF81]/20 border-[#1F554A]';
+    if (score >= 75) return 'text-[#1F554A] bg-[#C4FF81]/10 border-[#DCDEDC]';
+    return 'text-gray-600 bg-gray-50 border-gray-200';
+  };
+
+  // --- Handlers ---
   const handleLeadToggle = (leadId: string) => {
     setSelectedLeads(prev => {
       if (prev.includes(leadId)) {
@@ -185,12 +199,6 @@ export function StepRanking({ onComplete }: StepRankingProps) {
     toast.success('Top 5 guardado. Dossiers generados correctamente.');
     setIsSubmitting(false);
     onComplete(selectedLeads);
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 85) return 'text-[#1F554A] bg-[#C4FF81]/20 border-[#1F554A]';
-    if (score >= 75) return 'text-[#1F554A] bg-[#C4FF81]/10 border-[#DCDEDC]';
-    return 'text-gray-600 bg-gray-50 border-gray-200';
   };
 
   if (showProcessing) {
