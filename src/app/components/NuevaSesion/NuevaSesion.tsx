@@ -11,6 +11,7 @@ import type { GanchoMercado } from '../../../types/db/ganchoMercado';
 
 // Internal — services
 import { fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos } from '../../../services/supabaseService';
+import { triggerE3NuevaSesion } from '../../../services/n8nService';
 
 // Internal — queries
 import { useSemanasQuery } from '../../queries/semanas';
@@ -121,17 +122,25 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentSemana) return;
     setIsSubmitting(true);
 
-    // Simular envío
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    toast.success(
-      "Sesión iniciada. Te notificaremos cuando las propuestas de ICP estén listas.",
-    );
-
-    setIsSubmitting(false);
-    onComplete();
+    try {
+      toast.success("Sesión iniciada. Te notificaremos cuando las propuestas de ICP estén listas.");
+      await triggerE3NuevaSesion({
+        brokerName: formData.brokerName,
+        operationalFocus: formData.operationalFocus,
+        assetClass: formData.assetClass,
+        additionalContext: formData.additionalContext,
+        semanaId: currentSemana.id,
+        semanaFechaInicio: currentSemana.fecha_inicio_semana,
+      });
+      onComplete();
+    } catch {
+      toast.error("Error al iniciar la sesión. Intenta de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
