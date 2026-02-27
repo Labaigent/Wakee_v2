@@ -11,7 +11,7 @@ import type { SenalMercado } from '../../../types/db/senalMercado';
 import type { GanchoMercado } from '../../../types/db/ganchoMercado';
 
 // Internal — services
-import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado } from '../../../services/supabaseService';
+import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos } from '../../../services/supabaseService';
 
 // Internal — components
 import { Button } from "../ui/button";
@@ -52,9 +52,12 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
   const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
   const [cargandoSeñales, setCargandoSeñales] = useState(false);
   const [cargandoGanchos, setCargandoGanchos] = useState(false);
+  const [cargandoInputs, setCargandoInputs] = useState(false);
   const [semanas, setSemanas] = useState<Semana[]>([]);
   const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
   const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
+  const [opcionesFocoOperativo, setOpcionesFocoOperativo] = useState<string[]>([]);
+  const [opcionesAssetClass, setOpcionesAssetClass] = useState<string[]>([]);
 
   // NuevaSesion siempre muestra la semana más reciente (sin navegación).
   const currentSemana = semanas[0];
@@ -83,6 +86,33 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
       .then(data => { setGanchosMercado(data); setCargandoGanchos(false); })
       .catch(() => setCargandoGanchos(false));
   }, [currentSemana?.id]);
+
+  // Carga inputs estratégicos para poblar los dropdowns.
+  useEffect(() => {
+    setCargandoInputs(true);
+    fetchInputsEstrategicos()
+      .then(data => {
+        const categorias = Array.from(
+          new Set(
+            data
+              .map(row => row.category)
+              .filter((value): value is string => Boolean(value?.trim()))
+          )
+        );
+        const subcategorias = Array.from(
+          new Set(
+            data
+              .map(row => row.subcategory)
+              .filter((value): value is string => Boolean(value?.trim()))
+          )
+        );
+
+        setOpcionesFocoOperativo(categorias);
+        setOpcionesAssetClass(subcategorias);
+        setCargandoInputs(false);
+      })
+      .catch(() => setCargandoInputs(false));
+  }, []);
 
   // --- Helpers ---
   const isValid =
@@ -154,17 +184,17 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
                   value={formData.operationalFocus}
                   onValueChange={(v) => handleChange("operationalFocus", v)}
                   required
+                  disabled={cargandoInputs}
                 >
                   <SelectTrigger id="operationalFocus" className="mt-2">
                     <SelectValue placeholder="Selecciona tu foco" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tenant-rep">
-                      Tenant Representation
-                    </SelectItem>
-                    <SelectItem value="landlord-rep">
-                      Landlord Representation
-                    </SelectItem>
+                    {opcionesFocoOperativo.map((categoria) => (
+                      <SelectItem key={categoria} value={categoria}>
+                        {categoria}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -177,17 +207,17 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
                   value={formData.assetClass}
                   onValueChange={(v) => handleChange("assetClass", v)}
                   required
+                  disabled={cargandoInputs}
                 >
                   <SelectTrigger id="assetClass" className="mt-2">
                     <SelectValue placeholder="Selecciona asset class" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="office">
-                      Oficinas corporativas y Servicios BPO
-                    </SelectItem>
-                    <SelectItem value="industrial">
-                      Industrial / Logística
-                    </SelectItem>
+                    {opcionesAssetClass.map((subcategoria) => (
+                      <SelectItem key={subcategoria} value={subcategoria}>
+                        {subcategoria}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

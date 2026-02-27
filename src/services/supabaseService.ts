@@ -2,6 +2,7 @@ import { supabase, isSupabaseAvailable } from './supabaseClient';
 import type { SenalMercado } from '../types/db/senalMercado';
 import type { GanchoMercado } from '../types/db/ganchoMercado';
 import type { Semana } from '../types/db/semana';
+import type { InputEstrategicoOption } from '../types/db/inputEstrategico';
 
 /**
  * Fetch market signals for a given week from Supabase
@@ -41,12 +42,15 @@ export async function fetchSenalesMercado(
 
     if (!semanaId) {
       // Indirect path: resolve Monday date to semana ID via semanas table
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('semanas')
         .select('id')
         .eq('fecha_inicio_semana', params.fechaLunes)
         .maybeSingle();
 
+      if (error) {
+        throw new Error('Failed to retrieve semana ID from public.semanas');
+      }
       if (!data) return [];
       semanaId = data.id;
     }
@@ -61,9 +65,8 @@ export async function fetchSenalesMercado(
     if (error) throw error;
 
     return data || [];
-  } catch (error) {
-    console.error('[supabaseService] Failed to fetch senales_mercado:', error);
-    throw new Error('Failed to retrieve market signals from database');
+  } catch {
+    throw new Error('Failed to retrieve market signals from public.senales_mercado');
   }
 }
 
@@ -105,12 +108,15 @@ export async function fetchGanchosMercado(
 
     if (!semanaId) {
       // Indirect path: resolve Monday date to semana ID via semanas table
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('semanas')
         .select('id')
         .eq('fecha_inicio_semana', params.fechaLunes)
         .maybeSingle();
 
+      if (error) {
+        throw new Error('Failed to retrieve semana ID from public.semanas');
+      }
       if (!data) return [];
       semanaId = data.id;
     }
@@ -125,9 +131,8 @@ export async function fetchGanchosMercado(
     if (error) throw error;
 
     return data || [];
-  } catch (error) {
-    console.error('[supabaseService] Failed to fetch ganchos_mercado:', error);
-    throw new Error('Failed to retrieve market hooks from database');
+  } catch {
+    throw new Error('Failed to retrieve market hooks from public.ganchos_mercado');
   }
 }
 
@@ -147,12 +152,59 @@ export async function fetchSemanas(): Promise<Semana[]> {
     return [];
   }
 
-  const { data, error } = await supabase
-    .from('semanas')
-    .select('*')
-    .order('fecha_inicio_semana', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('semanas')
+      .select('*')
+      .order('fecha_inicio_semana', { ascending: false });
 
-  if (error) throw error;
-  return data || [];
+    if (error) throw error;
+    return data || [];
+  } catch {
+    throw new Error('Failed to retrieve weeks from public.semanas');
+  }
 }
 
+/**
+ * Fetch strategic input options from Supabase
+ *
+ * Purpose: Retrieves distinct `category` and `subcategory` values from
+ * `config.inputs_estrategicos` to populate the NuevaSesion dropdowns.
+ *
+ * Note: Supabase JS does not expose a native DISTINCT select option, so we
+ * dedupe results client-side to keep the data clean and consistent.
+ *
+ * @returns {Promise<InputEstrategicoOption[]>} Array of unique category/subcategory pairs
+ * Returns empty array if Supabase is unavailable
+ */
+export async function fetchInputsEstrategicos(): Promise<InputEstrategicoOption[]> {
+  if (!isSupabaseAvailable() || !supabase) {
+    console.warn('[supabaseService] Supabase is not available - returning empty inputs_estrategicos list');
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .schema('config')
+      .from('inputs_estrategicos')
+      .select('category, subcategory')
+      .order('category', { ascending: true })
+      .order('subcategory', { ascending: true });
+
+    if (error) throw error;
+
+    const rows = data || [];
+    const uniqueRows = Array.from(
+      new Map(
+        rows.map(row => [
+          `${row.category ?? ''}||${row.subcategory ?? ''}`,
+          row,
+        ])
+      ).values()
+    );
+
+    return uniqueRows;
+  } catch {
+    throw new Error('Failed to retrieve strategic inputs from config.inputs_estrategicos');
+  }
+}
