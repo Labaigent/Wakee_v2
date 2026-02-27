@@ -7,7 +7,7 @@ import {
 } from "./components/ui/tabs";
 import { Dashboard } from "./components/Dashboard";
 import { NuevaSesion } from "./components/NuevaSesion/NuevaSesion";
-import { PendingTasks } from "./components/PendingTasks";
+import { Segmentacion } from "./components/Segmentacion";
 import { SessionHistory } from "./components/SessionHistory";
 import { ActiveLeads } from "./components/ActiveLeads";
 import { MasterIntelligenceReport } from "./components/MasterReport/MasterIntelligenceReport";
@@ -103,7 +103,7 @@ function App() {
             />
           </TabsContent>
           <TabsContent value="pending" className="mt-0">
-            <PendingTasks />
+            <Segmentacion />
           </TabsContent>
           <TabsContent value="history" className="mt-0">
             <SessionHistory />

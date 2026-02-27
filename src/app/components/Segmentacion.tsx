@@ -12,7 +12,7 @@ import { LeadRanking } from './LeadRanking';
 import { LeadDossier } from './LeadDossier';
 import { EmailDrafts } from './EmailDrafts';
 
-export function PendingTasks() {
+export function Segmentacion() {
   const [currentView, setCurrentView] = useState<'intro' | 'wizard' | 'ranking' | 'dossier' | 'email'>('intro');
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
 
@@ -301,3 +301,4 @@ function TaskDetail({ task, selectedLeads, setSelectedLeads, onComplete, onStart
     </div>
   );
 }
+
