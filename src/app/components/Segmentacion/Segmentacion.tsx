@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import type { SegmentacionStep } from './segmentacionSteps';
 import { getStepIndex } from './segmentacionSteps';
@@ -43,37 +43,6 @@ export function Segmentacion() {
       createdAt: '2026-02-11T10:30:00',
     },
   ];
-
-  // Búsqueda: al entrar en paso "busqueda" con progreso < 100, ejecutar simulación y luego ir a ranking
-  useEffect(() => {
-    if (currentStep !== 'busqueda' || processingProgress >= 100) return;
-
-    const stages = [
-      { progress: 20, status: 'Conectando con LinkedIn Sales Navigator...' },
-      { progress: 40, status: 'Ejecutando búsqueda boolean...' },
-      { progress: 60, status: 'Extrayendo perfiles relevantes...' },
-      { progress: 80, status: 'Calculando scores de matching...' },
-      { progress: 100, status: 'Completado' },
-    ];
-
-    let cancelled = false;
-    (async () => {
-      for (const stage of stages) {
-        if (cancelled) return;
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        if (cancelled) return;
-        setProcessingProgress(stage.progress);
-        setProcessingStatus(stage.status);
-      }
-      if (cancelled) return;
-      toast.success('Búsqueda completada. 30 leads encontrados.');
-      setCurrentStep('ranking');
-      updateMaxReached('ranking');
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentStep, updateMaxReached]);
 
   const handleStartWizard = () => {
     setSelectedLeads([]);
@@ -172,6 +141,14 @@ export function Segmentacion() {
           <StepBusqueda
             processingProgress={processingProgress}
             processingStatus={processingStatus}
+            onProgress={(progress, status) => {
+              setProcessingProgress(progress);
+              setProcessingStatus(status);
+            }}
+            onComplete={() => {
+              setCurrentStep('ranking');
+              updateMaxReached('ranking');
+            }}
           />
         )}
 

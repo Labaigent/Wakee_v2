@@ -1,11 +1,51 @@
+import { useEffect } from 'react';
 import { Loader2, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface StepBusquedaProps {
   processingProgress: number;
   processingStatus: string;
+  onProgress: (progress: number, status: string) => void;
+  onComplete: () => void;
 }
 
-export function StepBusqueda({ processingProgress, processingStatus }: StepBusquedaProps) {
+const BUSQUEDA_STAGES = [
+  { progress: 20, status: 'Conectando con LinkedIn Sales Navigator...' },
+  { progress: 40, status: 'Ejecutando búsqueda boolean...' },
+  { progress: 60, status: 'Extrayendo perfiles relevantes...' },
+  { progress: 80, status: 'Calculando scores de matching...' },
+  { progress: 100, status: 'Completado' },
+];
+
+export function StepBusqueda({
+  processingProgress,
+  processingStatus,
+  onProgress,
+  onComplete,
+}: StepBusquedaProps) {
+  // Ejecutar simulación solo al montar si el progreso aún no está al 100% (p. ej. al volver desde ranking no se re-ejecuta)
+  useEffect(() => {
+    if (processingProgress >= 100) return;
+
+    let cancelled = false;
+    (async () => {
+      for (const stage of BUSQUEDA_STAGES) {
+        if (cancelled) return;
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        if (cancelled) return;
+        onProgress(stage.progress, stage.status);
+      }
+      if (cancelled) return;
+      toast.success('Búsqueda completada. 30 leads encontrados.');
+      onComplete();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Solo al montar; processingProgress se lee para no re-ejecutar si ya está completo
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="py-12 space-y-8">
       <div className="text-center max-w-md mx-auto space-y-6">
