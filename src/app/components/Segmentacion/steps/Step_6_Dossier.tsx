@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import { Button } from '../../ui/button';
+import { Badge } from '../../ui/badge';
 import { 
   ChevronDown, 
   ChevronUp,
@@ -28,13 +28,13 @@ interface Lead {
   };
 }
 
-interface LeadDossierProps {
+interface StepDossierProps {
   sessionId: string;
   selectedLeads: string[];
   onGenerateEmails: () => void;
 }
 
-export function LeadDossier({ selectedLeads, onGenerateEmails }: LeadDossierProps) {
+export function StepDossier({ selectedLeads, onGenerateEmails }: StepDossierProps) {
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
 
   // Mock data - esto vendría del backend después de E9

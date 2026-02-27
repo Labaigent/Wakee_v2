@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
-import { Label } from './ui/label';
-import { Progress } from './ui/progress';
+import { useState, useEffect } from 'react';
+import { Button } from '../../ui/button';
+import { Textarea } from '../../ui/textarea';
+import { Input } from '../../ui/input';
+import { Badge } from '../../ui/badge';
+import { Label } from '../../ui/label';
+import { Progress } from '../../ui/progress';
 import { toast } from 'sonner';
-import { copyToClipboard } from '../utils/clipboard';
+import { copyToClipboard } from '../../../utils/clipboard';
 import { 
   Copy,
   Check,
@@ -25,13 +25,13 @@ interface EmailDraft {
   body: string;
 }
 
-interface EmailDraftsProps {
+interface StepMensajesProps {
   sessionId: string;
   selectedLeads: string[];
   onComplete: () => void;
 }
 
-export function EmailDrafts({ onComplete }: EmailDraftsProps) {
+export function StepMensajes({ onComplete }: StepMensajesProps) {
   const [isGenerating, setIsGenerating] = useState(true);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStatus, setGenerationStatus] = useState('');
@@ -41,7 +41,7 @@ export function EmailDrafts({ onComplete }: EmailDraftsProps) {
   const [emailDrafts, setEmailDrafts] = useState<EmailDraft[]>([]);
 
   // Simular generación de correos (E10+E11)
-  useState(() => {
+  useEffect(() => {
     const generateEmails = async () => {
       const stages = [
         { progress: 20, status: 'Analizando contexto de cada lead...' },
@@ -195,7 +195,7 @@ Cushman & Wakefield Colombia`
     };
 
     generateEmails();
-  });
+  }, []);
 
   const handleRetry = () => {
     setIsGenerating(true);

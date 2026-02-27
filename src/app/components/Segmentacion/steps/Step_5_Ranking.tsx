@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Checkbox } from './ui/checkbox';
-import { Badge } from './ui/badge';
+import { Button } from '../../ui/button';
+import { Checkbox } from '../../ui/checkbox';
+import { Badge } from '../../ui/badge';
 import { toast } from 'sonner';
 import { 
   Loader2,
@@ -32,12 +32,12 @@ interface Lead {
   linkedinUrl: string;
 }
 
-interface LeadRankingProps {
+interface StepRankingProps {
   sessionId: string;
   onComplete: (selectedLeads: string[]) => void;
 }
 
-export function LeadRanking({ onComplete }: LeadRankingProps) {
+export function StepRanking({ onComplete }: StepRankingProps) {
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
