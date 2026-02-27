@@ -29,23 +29,26 @@ import { StepMensajes } from './steps/Step_7_Mensajes';
 
 const SESSION_ID = 'session-001';
 
-/** Convierte el id interno de ejecución a un código amigable para la UI (ej. exec-001 → E3-001). */
-function formatExecutionDisplayId(id: string): string {
-  return id.replace(/^exec-/, 'E3-');
+/** Convierte el id numérico de ejecución a un código amigable para la UI (ej. 1 → E-001, 10 → E-010). Sin "3" en el prefijo. */
+function formatExecutionDisplayId(id: number | string): string {
+  const n = typeof id === 'number' ? id : parseInt(String(id).replace(/^exec-/, ''), 10);
+  if (Number.isNaN(n)) return `E-${id}`;
+  const padded = String(n).padStart(3, '0');
+  return `E-${padded}`;
 }
 
-/** Mock: listado de ejecuciones para el dropdown (sustituir por datos de BD/API). */
+/** Mock: listado de ejecuciones para el dropdown (sustituir por datos de BD/API). Id = número en BD. */
 const MOCK_EJECUCIONES = [
-  { id: 'exec-001', label: 'Sesión Industrial', progress: 'Paso 1 de 7 · ICP', status: 'en_curso' as const },
-  { id: 'exec-002', label: 'Prospección Q1 Manufactura', progress: 'Paso 4 de 7 · Búsqueda', status: 'en_curso' as const },
-  { id: 'exec-003', label: 'Leads Logística', progress: 'Completada', status: 'completada' as const },
+  { id: 1, progress: 'Paso 1 de 7 · ICP', status: 'en_curso' as const },
+  { id: 2, progress: 'Paso 4 de 7 · Búsqueda', status: 'en_curso' as const },
+  { id: 3, progress: 'Completada', status: 'completada' as const },
 ];
 
 export function Segmentacion() {
   // --- State ---
   const [currentStep, setCurrentStep] = useState<SegmentacionStep>('intro');
   const [maxReachedStep, setMaxReachedStep] = useState<SegmentacionStep>('intro');
-  const [selectedExecutionId, setSelectedExecutionId] = useState<string>('');
+  const [selectedExecutionId, setSelectedExecutionId] = useState<number | null>(null);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   // Estado compartido por pasos ICP → Búsqueda (StepIcp, StepPersona, StepFiltro, StepBusqueda)
   const [selectedIcp, setSelectedIcp] = useState('');
@@ -76,7 +79,7 @@ export function Segmentacion() {
 
   // --- Handlers ---
   const handleStartWizard = () => {
-    if (!selectedExecutionId) {
+    if (selectedExecutionId == null) {
       toast.error('Selecciona una ejecución para continuar');
       return;
     }
@@ -103,6 +106,7 @@ export function Segmentacion() {
     setCurrentStep('intro');
     setMaxReachedStep('intro');
     setSelectedLeads([]);
+    setSelectedExecutionId(null);
     setSelectedIcp('');
     setExpandedIcp(null);
     setPersonaEdits('');
@@ -124,8 +128,10 @@ export function Segmentacion() {
                 Ejecución
               </Label>
               <Select
-                value={selectedExecutionId || undefined}
-                onValueChange={setSelectedExecutionId}
+                value={selectedExecutionId != null ? String(selectedExecutionId) : undefined}
+                onValueChange={(v) =>
+                  setSelectedExecutionId(v != null && v !== '' ? Number(v) : null)
+                }
               >
                 <SelectTrigger
                   id="ejecucion-select"
@@ -137,7 +143,7 @@ export function Segmentacion() {
                   {MOCK_EJECUCIONES.map((ej) => (
                     <SelectItem
                       key={ej.id}
-                      value={ej.id}
+                      value={String(ej.id)}
                       className="focus:bg-[#C4FF81]/20 focus:text-[#141414]"
                     >
                       {formatExecutionDisplayId(ej.id)} — {ej.progress}
@@ -154,7 +160,7 @@ export function Segmentacion() {
             </p>
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="inline-flex items-center rounded-md border border-[#DCDEDC] bg-[#C4FF81]/10 px-2.5 py-1 text-sm font-medium text-[#141414]">
-                {formatExecutionDisplayId(selectedExecutionId)}
+                {selectedExecutionId != null && formatExecutionDisplayId(selectedExecutionId)}
               </span>
               <button
                 type="button"
@@ -184,7 +190,7 @@ export function Segmentacion() {
           <StepIntro
             title={pendingTasks[0].title}
             phase={pendingTasks[0].phase}
-            isExecutionSelected={!!selectedExecutionId}
+            isExecutionSelected={selectedExecutionId != null}
             onStartWizard={handleStartWizard}
           />
         )}
