@@ -6,12 +6,14 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 // Internal — types
-import type { Semana } from '../../../types/db/semana';
 import type { SenalMercado } from '../../../types/db/senalMercado';
 import type { GanchoMercado } from '../../../types/db/ganchoMercado';
 
 // Internal — services
-import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos } from '../../../services/supabaseService';
+import { fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos } from '../../../services/supabaseService';
+
+// Internal — queries
+import { useSemanasQuery } from '../../queries/semanas';
 
 // Internal — components
 import { Button } from "../ui/button";
@@ -49,11 +51,10 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
   });
 
   // --- State (data layer) ---
-  const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
+  const { data: semanas = [], isLoading: isLoadingSemanas } = useSemanasQuery();
   const [cargandoSeñales, setCargandoSeñales] = useState(false);
   const [cargandoGanchos, setCargandoGanchos] = useState(false);
   const [cargandoInputs, setCargandoInputs] = useState(false);
-  const [semanas, setSemanas] = useState<Semana[]>([]);
   const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
   const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
   const [opcionesFocoOperativo, setOpcionesFocoOperativo] = useState<string[]>([]);
@@ -61,13 +62,6 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
 
   // NuevaSesion siempre muestra la semana más reciente (sin navegación).
   const currentSemana = semanas[0];
-
-  // Carga semanas disponibles al montar — solo usamos semanas[0] (la más reciente).
-  useEffect(() => {
-    fetchSemanas()
-      .then(data => { setSemanas(data); setIsLoadingSemanas(false); })
-      .catch(() => setIsLoadingSemanas(false));
-  }, []);
 
   // Re-fetcha señales cuando resuelve la semana activa.
   useEffect(() => {
