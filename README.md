@@ -4,6 +4,14 @@
 
 ---
 
+## Integraciones clave
+
+- **Supabase**: fuentes de datos para señales/ganchos y opciones dinámicas de sesión (inputs estratégicos).
+- **n8n**: webhook para activar flujos de actualización desde `Nueva Sesión`.
+- **TanStack Query**: caching y revalidación de datos en componentes que consumen Supabase.
+
+---
+
 ## Etapas del flujo
 
 |   | Etapa | Descripción |

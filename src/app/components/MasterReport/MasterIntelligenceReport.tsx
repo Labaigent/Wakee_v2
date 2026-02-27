@@ -2,18 +2,21 @@
 import { useState, useEffect } from 'react';
 
 // External libraries
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, TrendingUp } from 'lucide-react';
 
 // Internal — services
-import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado } from '../../../services/supabaseService';
+import { fetchSenalesMercado, fetchGanchosMercado } from '../../../services/supabaseService';
 import { triggerMasterReportUpdate } from '../../../services/n8nService';
 
 // Internal — types
-import type { Semana } from '../../../types/db/semana';
 import type { SenalMercado } from '../../../types/db/senalMercado';
 import type { GanchoMercado } from '../../../types/db/ganchoMercado';
 import type { CategoryTab } from './types';
+
+// Internal — queries
+import { useSemanasQuery, SEMANAS_QUERY_KEY } from '../../queries/semanas';
 
 // Internal — components
 import { Button } from '../ui/button';
@@ -23,15 +26,15 @@ import { GanchosMercado } from './GanchosMercado';
 
 export function MasterIntelligenceReport() {
   // --- State ---
+  const queryClient = useQueryClient();
+  const { data: semanas = [], isLoading: isLoadingSemanas } = useSemanasQuery();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
   const [cargandoSeñales, setCargandoSeñales] = useState(false);
   const [cargandoGanchos, setCargandoGanchos] = useState(false);
   const [expandedSeñales, setExpandedSeñales] = useState<number[]>([]);
   const [expandedGanchos, setExpandedGanchos] = useState<number[]>([]);
   const [indiceSemana, setIndiceSemana] = useState(0);
   const [activeTab, setActiveTab] = useState<CategoryTab>('senales');
-  const [semanas, setSemanas] = useState<Semana[]>([]);
   const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
   const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
 
@@ -39,16 +42,6 @@ export function MasterIntelligenceReport() {
   const currentSemana = semanas[indiceSemana]; // drives fetchSenalesMercado + fetchGanchosMercado
   // Refresh only makes sense on the latest week — triggering n8n on a past week would overwrite current data
   const isLatestWeek = indiceSemana === 0;
-
-  // --- Effects ---
-  useEffect(() => {
-    fetchSemanas()
-      .then(data => {
-        setSemanas(data);
-        setIsLoadingSemanas(false);
-      })
-      .catch(() => setIsLoadingSemanas(false));
-  }, []);
 
   // Re-fetch signals whenever the active week changes.
   // Watching currentSemana?.id (not the object) avoids re-runs on unrelated reference updates.
@@ -101,7 +94,8 @@ export function MasterIntelligenceReport() {
       setCargandoGanchos(true);
       await triggerMasterReportUpdate();
 
-      // n8n confirmed DB is updated — re-fetch both datasets for the current week
+      // n8n confirmed DB is updated — invalida caché de semanas y re-fetch datasets
+      await queryClient.invalidateQueries({ queryKey: SEMANAS_QUERY_KEY });
 
       const [señales, ganchos] = await Promise.all([
         fetchSenalesMercado({ semanaId: currentSemana.id }),
