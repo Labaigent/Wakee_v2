@@ -4,10 +4,11 @@ import { Button } from '../../ui/button';
 interface StepIntroProps {
   title: string;
   phase: string;
+  isExecutionSelected: boolean;
   onStartWizard: () => void;
 }
 
-export function StepIntro({ title, phase, onStartWizard }: StepIntroProps) {
+export function StepIntro({ title, phase, isExecutionSelected, onStartWizard }: StepIntroProps) {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Header */}
@@ -64,7 +65,8 @@ export function StepIntro({ title, phase, onStartWizard }: StepIntroProps) {
           </div>
           <Button
             onClick={onStartWizard}
-            className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90 px-8 py-6 text-base sm:text-lg h-auto"
+            disabled={!isExecutionSelected}
+            className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90 px-8 py-6 text-base sm:text-lg h-auto disabled:opacity-50 disabled:pointer-events-none"
           >
             <svg className="size-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
