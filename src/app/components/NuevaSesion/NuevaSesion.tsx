@@ -6,12 +6,15 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 // Internal — types
-import type { Semana } from '../../../types/db/semana';
 import type { SenalMercado } from '../../../types/db/senalMercado';
 import type { GanchoMercado } from '../../../types/db/ganchoMercado';
 
 // Internal — services
-import { fetchSemanas, fetchSenalesMercado, fetchGanchosMercado } from '../../../services/supabaseService';
+import { fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos } from '../../../services/supabaseService';
+import { triggerE3NuevaSesion } from '../../../services/n8nService';
+
+// Internal — queries
+import { useSemanasQuery } from '../../queries/semanas';
 
 // Internal — components
 import { Button } from "../ui/button";
@@ -49,22 +52,17 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
   });
 
   // --- State (data layer) ---
-  const [isLoadingSemanas, setIsLoadingSemanas] = useState(true);
+  const { data: semanas = [], isLoading: isLoadingSemanas } = useSemanasQuery();
   const [cargandoSeñales, setCargandoSeñales] = useState(false);
   const [cargandoGanchos, setCargandoGanchos] = useState(false);
-  const [semanas, setSemanas] = useState<Semana[]>([]);
+  const [cargandoInputs, setCargandoInputs] = useState(false);
   const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
   const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
+  const [opcionesFocoOperativo, setOpcionesFocoOperativo] = useState<string[]>([]);
+  const [opcionesAssetClass, setOpcionesAssetClass] = useState<string[]>([]);
 
   // NuevaSesion siempre muestra la semana más reciente (sin navegación).
   const currentSemana = semanas[0];
-
-  // Carga semanas disponibles al montar — solo usamos semanas[0] (la más reciente).
-  useEffect(() => {
-    fetchSemanas()
-      .then(data => { setSemanas(data); setIsLoadingSemanas(false); })
-      .catch(() => setIsLoadingSemanas(false));
-  }, []);
 
   // Re-fetcha señales cuando resuelve la semana activa.
   useEffect(() => {
@@ -84,6 +82,33 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
       .catch(() => setCargandoGanchos(false));
   }, [currentSemana?.id]);
 
+  // Carga inputs estratégicos para poblar los dropdowns.
+  useEffect(() => {
+    setCargandoInputs(true);
+    fetchInputsEstrategicos()
+      .then(data => {
+        const categorias = Array.from(
+          new Set(
+            data
+              .map(row => row.category)
+              .filter((value): value is string => Boolean(value?.trim()))
+          )
+        );
+        const subcategorias = Array.from(
+          new Set(
+            data
+              .map(row => row.subcategory)
+              .filter((value): value is string => Boolean(value?.trim()))
+          )
+        );
+
+        setOpcionesFocoOperativo(categorias);
+        setOpcionesAssetClass(subcategorias);
+        setCargandoInputs(false);
+      })
+      .catch(() => setCargandoInputs(false));
+  }, []);
+
   // --- Helpers ---
   const isValid =
     formData.brokerName &&
@@ -97,17 +122,25 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentSemana) return;
     setIsSubmitting(true);
 
-    // Simular envío
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    toast.success(
-      "Sesión iniciada. Te notificaremos cuando las propuestas de ICP estén listas.",
-    );
-
-    setIsSubmitting(false);
-    onComplete();
+    try {
+      toast.success("Sesión iniciada. Te notificaremos cuando las propuestas de ICP estén listas.");
+      await triggerE3NuevaSesion({
+        brokerName: formData.brokerName,
+        operationalFocus: formData.operationalFocus,
+        assetClass: formData.assetClass,
+        additionalContext: formData.additionalContext,
+        semanaId: currentSemana.id,
+        semanaFechaInicio: currentSemana.fecha_inicio_semana,
+      });
+      onComplete();
+    } catch {
+      toast.error("Error al iniciar la sesión. Intenta de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -154,17 +187,17 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
                   value={formData.operationalFocus}
                   onValueChange={(v) => handleChange("operationalFocus", v)}
                   required
+                  disabled={cargandoInputs}
                 >
                   <SelectTrigger id="operationalFocus" className="mt-2">
                     <SelectValue placeholder="Selecciona tu foco" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="tenant-rep">
-                      Tenant Representation
-                    </SelectItem>
-                    <SelectItem value="landlord-rep">
-                      Landlord Representation
-                    </SelectItem>
+                    {opcionesFocoOperativo.map((categoria) => (
+                      <SelectItem key={categoria} value={categoria}>
+                        {categoria}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -177,17 +210,17 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
                   value={formData.assetClass}
                   onValueChange={(v) => handleChange("assetClass", v)}
                   required
+                  disabled={cargandoInputs}
                 >
                   <SelectTrigger id="assetClass" className="mt-2">
                     <SelectValue placeholder="Selecciona asset class" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="office">
-                      Oficinas corporativas y Servicios BPO
-                    </SelectItem>
-                    <SelectItem value="industrial">
-                      Industrial / Logística
-                    </SelectItem>
+                    {opcionesAssetClass.map((subcategoria) => (
+                      <SelectItem key={subcategoria} value={subcategoria}>
+                        {subcategoria}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
