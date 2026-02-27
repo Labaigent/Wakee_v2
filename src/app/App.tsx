@@ -7,7 +7,7 @@ import {
 } from "./components/ui/tabs";
 import { Dashboard } from "./components/Dashboard";
 import { NuevaSesion } from "./components/NuevaSesion/NuevaSesion";
-import { Segmentacion } from "./components/Segmentacion";
+import { Segmentacion } from "./components/Segmentacion/Segmentacion";
 import { SessionHistory } from "./components/SessionHistory";
 import { ActiveLeads } from "./components/ActiveLeads";
 import { MasterIntelligenceReport } from "./components/MasterReport/MasterIntelligenceReport";

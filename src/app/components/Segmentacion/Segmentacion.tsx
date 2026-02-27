@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Checkbox } from './ui/checkbox';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Separator } from './ui/separator';
+import { Button } from '../ui/button';
+import { Checkbox } from '../ui/checkbox';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Separator } from '../ui/separator';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
-import { StrategyWizard } from './StrategyWizard';
-import { LeadRanking } from './LeadRanking';
-import { LeadDossier } from './LeadDossier';
-import { EmailDrafts } from './EmailDrafts';
+import { StrategyWizard } from '../StrategyWizard';
+import { LeadRanking } from '../LeadRanking';
+import { LeadDossier } from '../LeadDossier';
+import { EmailDrafts } from '../EmailDrafts';
 
 export function Segmentacion() {
   const [currentView, setCurrentView] = useState<'intro' | 'wizard' | 'ranking' | 'dossier' | 'email'>('intro');
