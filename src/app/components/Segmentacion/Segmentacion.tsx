@@ -242,6 +242,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
             title={pendingTasks[0].title}
             phase={pendingTasks[0].phase}
             isExecutionSelected={selectedExecutionId != null}
+            hasEjecuciones={!ejecucionesLoading && ejecuciones.length > 0}
             isLoading={isStartingWizard}
             onStartWizard={handleStartWizard}
           />

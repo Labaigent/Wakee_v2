@@ -5,11 +5,12 @@ interface StepIntroProps {
   title: string;
   phase: string;
   isExecutionSelected: boolean;
+  hasEjecuciones: boolean;
   isLoading: boolean;
   onStartWizard: () => void;
 }
 
-export function StepIntro({ title, phase, isExecutionSelected, isLoading, onStartWizard }: StepIntroProps) {
+export function StepIntro({ title, phase, isExecutionSelected, hasEjecuciones, isLoading, onStartWizard }: StepIntroProps) {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Header */}
@@ -66,7 +67,7 @@ export function StepIntro({ title, phase, isExecutionSelected, isLoading, onStar
           </div>
           <Button
             onClick={onStartWizard}
-            disabled={!isExecutionSelected || isLoading}
+            disabled={!hasEjecuciones || !isExecutionSelected || isLoading}
             className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90 px-8 py-6 text-base sm:text-lg h-auto disabled:opacity-50 disabled:pointer-events-none"
           >
             {isLoading ? (
