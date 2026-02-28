@@ -8,6 +8,9 @@ import { toast } from 'sonner';
 import type { SegmentacionStep } from './types';
 import { getStepIndex, SEGMENTACION_STEP_ORDER } from './types';
 
+// Internal — queries
+import { useEjecucionesQuery } from '@/app/queries/ejecuciones';
+
 // Internal — components
 import { Label } from '../ui/label';
 import {
@@ -37,14 +40,11 @@ function formatExecutionDisplayId(id: number | string): string {
   return `E-${padded}`;
 }
 
-/** Mock: listado de ejecuciones para el dropdown (sustituir por datos de BD/API). Id = número en BD. */
-const MOCK_EJECUCIONES = [
-  { id: 1, progress: 'Paso 1 de 7 · ICP', status: 'en_curso' as const },
-  { id: 2, progress: 'Paso 4 de 7 · Búsqueda', status: 'en_curso' as const },
-  { id: 3, progress: 'Completada', status: 'completada' as const },
-];
 
 export function Segmentacion() {
+  // --- Data ---
+  const { data: ejecuciones = [], isLoading: ejecucionesLoading } = useEjecucionesQuery();
+
   // --- State ---
   const [currentStep, setCurrentStep] = useState<SegmentacionStep>('intro');
   const [maxReachedStep, setMaxReachedStep] = useState<SegmentacionStep>('intro');
@@ -140,15 +140,25 @@ export function Segmentacion() {
                   <SelectValue placeholder="Selecciona una ejecución" />
                 </SelectTrigger>
                 <SelectContent>
-                  {MOCK_EJECUCIONES.map((ej) => (
-                    <SelectItem
-                      key={ej.id}
-                      value={String(ej.id)}
-                      className="focus:bg-[#C4FF81]/20 focus:text-[#141414]"
-                    >
-                      {formatExecutionDisplayId(ej.id)} — {ej.progress}
+                  {ejecucionesLoading ? (
+                    <SelectItem value="__loading__" disabled>
+                      Cargando ejecuciones…
                     </SelectItem>
-                  ))}
+                  ) : ejecuciones.length === 0 ? (
+                    <SelectItem value="__empty__" disabled>
+                      Sin ejecuciones disponibles
+                    </SelectItem>
+                  ) : (
+                    ejecuciones.map((ej) => (
+                      <SelectItem
+                        key={ej.id}
+                        value={String(ej.id)}
+                        className="focus:bg-[#C4FF81]/20 focus:text-[#141414]"
+                      >
+                        {formatExecutionDisplayId(ej.id)} — {ej.estado === 'completada' ? 'Completada' : ej.estado === 'error' ? 'Error' : (ej.etapa_label ?? `Etapa ${ej.etapa_siguiente}`)}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
