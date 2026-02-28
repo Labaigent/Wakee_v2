@@ -35,7 +35,10 @@
    npm i
    ```
 
-3. Configura las variables de entorno (por ejemplo un `.env` con Supabase/n8n si las usas).
+3. Configura las variables de entorno. Crea un `.env` con al menos:
+   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Supabase).
+   - `VITE_N8N_MASTER_REPORT_WEBHOOK_URL` (actualización del reporte maestro).
+   - `VITE_N8N_E3_ICP_WEBHOOK_URL` (flujo Segmentación / ICP).
 4. Arranca en desarrollo:
 
    ```bash

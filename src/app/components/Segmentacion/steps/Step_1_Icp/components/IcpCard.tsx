@@ -67,13 +67,12 @@ export function IcpCard({
             {isExpanded && (
               <div className="space-y-6 pt-4 border-t border-[#DCDEDC]">
                 <div className="grid grid-cols-1 sm:grid-cols-[2fr_3fr] gap-4">
+                  {/* Columna izquierda: tipo de entidad + caso de uso */}
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Industrias Específicas</p>
-                      <div className="flex flex-wrap gap-2">
-                        {icp.industry_specific.map((ind) => (
-                          <span key={ind} className="px-3 py-1.5 bg-[#1F554A] text-white text-xs font-medium rounded-md">{ind}</span>
-                        ))}
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tipo de Entidad</p>
+                      <div>
+                        <span className="px-3 py-1.5 bg-[#1F554A] text-white text-xs font-medium rounded-md">{icp.target_entity_type}</span>
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -81,11 +80,8 @@ export function IcpCard({
                       <p className="text-sm font-medium text-[#141414]">{icp.use_case_activated}</p>
                     </div>
                   </div>
+                  {/* Columna derecha: capex + score */}
                   <div className="space-y-4">
-                    <div className="space-y-2">
-                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tipo de Entidad</p>
-                      <p className="text-sm font-medium text-[#141414]">{icp.target_entity_type}</p>
-                    </div>
                     <div className="space-y-2">
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Intensidad de Capex</p>
                       <p className="text-sm font-medium text-[#141414]">{icp.capex_intensity}</p>

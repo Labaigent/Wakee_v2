@@ -2,17 +2,18 @@
 import { useState, useCallback, useEffect } from 'react';
 
 // External libraries
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 // Internal — types
 import type { SegmentacionStep } from './types';
-import { getStepIndex, SEGMENTACION_STEP_ORDER } from './types';
+import { getStepIndex, getStepForEtapa, SEGMENTACION_STEP_ORDER } from './types';
 
 // Internal — context
 import { usePerfilContext } from '@/app/context/PerfilContext';
 
 // Internal — queries
-import { useEjecucionesQuery } from '@/app/queries/ejecuciones';
+import { useEjecucionesQuery, EJECUCIONES_QUERY_KEY } from '@/app/queries/ejecuciones';
 
 // Internal — services
 import { triggerE3Icp } from '@/services/n8nService';
@@ -54,6 +55,7 @@ function formatExecutionDisplayId(id: number | string): string {
 export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
   // --- Context ---
   const { perfilId } = usePerfilContext();
+  const queryClient = useQueryClient();
 
   // --- Data ---
   const { data: ejecuciones = [], isLoading: ejecucionesLoading } = useEjecucionesQuery();
@@ -134,8 +136,31 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
     }
   };
 
+  // Maneja la selección de ejecución en el dropdown.
+  // Si la ejecución ya tiene progreso (etapa > intro), navega automáticamente al paso correspondiente.
+  const handleExecutionSelect = (rawValue: string) => {
+    const executionId = rawValue !== '' ? Number(rawValue) : null;
+    setSelectedExecutionId(executionId);
+
+    if (executionId == null) return;
+
+    const ejecucion = ejecuciones.find((ej) => ej.id === executionId);
+    if (!ejecucion) return;
+
+    const targetStep = getStepForEtapa(ejecucion.etapa_siguiente);
+
+    // Solo navegar si la ejecución ya tiene progreso más allá del intro
+    if (targetStep !== 'intro') {
+      setCurrentStep(targetStep);
+      setMaxReachedStep(targetStep);
+    }
+  };
+
   const handleCancelToIntro = () => {
+    queryClient.invalidateQueries({ queryKey: EJECUCIONES_QUERY_KEY });
     setCurrentStep('intro');
+    setMaxReachedStep('intro');
+    setSelectedExecutionId(null);
   };
 
   const handleStepNavClick = (step: Exclude<SegmentacionStep, 'intro'>) => {
@@ -170,9 +195,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
               </Label>
               <Select
                 value={selectedExecutionId != null ? String(selectedExecutionId) : undefined}
-                onValueChange={(v) =>
-                  setSelectedExecutionId(v != null && v !== '' ? Number(v) : null)
-                }
+                onValueChange={handleExecutionSelect}
               >
                 <SelectTrigger
                   id="ejecucion-select"
@@ -250,6 +273,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'icp' && (
           <StepIcp
+            ejecucionId={selectedExecutionId}
             selectedIcp={selectedIcp}
             onSelectedIcpChange={setSelectedIcp}
             expandedIcp={expandedIcp}

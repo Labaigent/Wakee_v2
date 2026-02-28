@@ -4,6 +4,7 @@ import type { GanchoMercado } from '../types/db/ganchoMercado';
 import type { Semana } from '../types/db/semana';
 import type { InputEstrategicoOption } from '../types/db/inputEstrategico';
 import type { Ejecucion } from '../types/db/ejecucion';
+import type { E3IcpOutput } from '../types/db/e3IcpOutput';
 
 /**
  * Fetch market signals for a given week from Supabase
@@ -270,4 +271,27 @@ export async function insertEjecucion(inputsEstrategicosId: number): Promise<Eje
   if (error) throw new Error('Failed to insert execution into ejecuciones.ejecucion');
 
   return { ...(data as Record<string, unknown>), etapa_label: null } as Ejecucion;
+}
+
+/**
+ * Obtiene los ICPs generados (E3) para una ejecución específica.
+ * Tabla: ejecuciones.e3_ejecucion_outpu_icp (sin RLS)
+ */
+export async function fetchE3IcpOutputs(ejecucionId: number): Promise<E3IcpOutput[]> {
+  if (!isSupabaseAvailable() || !supabase) {
+    console.warn('[supabaseService] Supabase no disponible - devolviendo lista vacía de e3 ICP outputs');
+    return [];
+  }
+  try {
+    const { data, error } = await supabase
+      .schema('ejecuciones')
+      .from('e3_ejecucion_outpu_icp')
+      .select('*')
+      .eq('ejecucion_id', ejecucionId)
+      .order('icp_rank', { ascending: true });
+    if (error) throw error;
+    return data ?? [];
+  } catch {
+    throw new Error('Failed to retrieve E3 ICP outputs from ejecuciones.e3_ejecucion_outpu_icp');
+  }
 }
