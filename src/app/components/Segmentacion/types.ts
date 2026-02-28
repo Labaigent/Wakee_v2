@@ -48,7 +48,7 @@ export function isStepUnlocked(step: SegmentacionStep, maxReachedStep: Segmentac
 
 /**
  * Opciones de ICP (Ideal Customer Profile) para el Wizard.
- * Incluye metadatos estratégicos, señales de mercado y criterios de calificación.
+ * Mapeado desde E3IcpOutput (ejecuciones.e3_ejecucion_outpu_icp).
  */
 export interface IcpOption {
   id: string;
@@ -58,7 +58,6 @@ export interface IcpOption {
     source_name: string;
     source_url: string;
   };
-  industry_specific: string[];
   use_case_activated: string;
   target_entity_type: string;
   capex_intensity: string;

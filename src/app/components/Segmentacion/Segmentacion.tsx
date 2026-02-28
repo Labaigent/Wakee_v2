@@ -250,6 +250,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'icp' && (
           <StepIcp
+            ejecucionId={selectedExecutionId}
             selectedIcp={selectedIcp}
             onSelectedIcpChange={setSelectedIcp}
             expandedIcp={expandedIcp}
