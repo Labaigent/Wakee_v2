@@ -7,5 +7,7 @@ export function useEjecucionesQuery() {
   return useQuery({
     queryKey: EJECUCIONES_QUERY_KEY,
     queryFn: fetchEjecuciones,
+    staleTime: 0,              // siempre stale — override del global de 5 min
+    refetchInterval: 5 * 60 * 1000,
   });
 }

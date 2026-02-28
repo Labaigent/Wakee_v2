@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Tabs,
   TabsContent,
@@ -12,10 +13,20 @@ import { SessionHistory } from "./components/SessionHistory";
 import { ActiveLeads } from "./components/ActiveLeads";
 import { MasterIntelligenceReport } from "./components/MasterReport/MasterIntelligenceReport";
 import { Toaster } from "./components/ui/sonner";
+import { EJECUCIONES_QUERY_KEY } from "./queries/ejecuciones";
 
 // App principal de Wakee - Prospección Inteligente C&W
 function App() {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [pendingEjecucionId, setPendingEjecucionId] = useState<number | null>(null);
+
+  const handleTabChange = (tab: string) => {
+    if (tab === "pending") {
+      queryClient.refetchQueries({ queryKey: EJECUCIONES_QUERY_KEY });
+    }
+    setActiveTab(tab);
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -46,7 +57,7 @@ function App() {
       {/* Navigation */}
       <div className="border-b border-[#DCDEDC] bg-white overflow-x-auto">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <TabsList className="bg-transparent border-0 p-0 h-auto flex whitespace-nowrap">
               <TabsTrigger
                 value="dashboard"
@@ -99,11 +110,14 @@ function App() {
           </TabsContent>
           <TabsContent value="new-session" className="mt-0">
             <NuevaSesion
-              onComplete={() => setActiveTab("pending")}
+              onComplete={(executionId) => {
+                setPendingEjecucionId(executionId);
+                handleTabChange("pending");
+              }}
             />
           </TabsContent>
           <TabsContent value="pending" className="mt-0">
-            <Segmentacion />
+            <Segmentacion initialExecutionId={pendingEjecucionId} />
           </TabsContent>
           <TabsContent value="history" className="mt-0">
             <SessionHistory />

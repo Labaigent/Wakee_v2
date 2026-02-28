@@ -229,7 +229,7 @@ export async function fetchEjecuciones(): Promise<Ejecucion[]> {
     // Fetch both in parallel — config.etapas labels are used to enrich ejecucion rows
     const [etapasResult, ejecucionesResult] = await Promise.all([
       supabase.schema('config').from('etapas').select('id, label'),
-      supabase.schema('ejecuciones').from('ejecucion').select('*').order('fecha_inicio', { ascending: false }),
+      supabase.schema('ejecuciones').from('ejecucion').select('*').order('id', { ascending: false }),
     ]);
 
     if (etapasResult.error) throw etapasResult.error;
@@ -246,4 +246,28 @@ export async function fetchEjecuciones(): Promise<Ejecucion[]> {
   } catch {
     throw new Error('Failed to retrieve executions from ejecuciones.ejecucion');
   }
+}
+
+/**
+ * Insert a new execution record into Supabase
+ *
+ * Purpose: Creates a new `ejecucion` row in the `ejecuciones` schema
+ * with the current timestamp as both start and last-updated dates.
+ * etapa_siguiente is always 3 for newly created sessions.
+ *
+ * @returns {Promise<Ejecucion>} The newly created execution record (with generated id)
+ * @throws If Supabase is unavailable or the insert fails
+ */
+export async function insertEjecucion(): Promise<Ejecucion> {
+  if (!isSupabaseAvailable() || !supabase) {
+    throw new Error('[supabaseService] Supabase is not available — cannot insert ejecucion');
+  }
+
+  const { data, error } = await supabase
+    .rpc('crear_ejecucion')
+    .single();
+
+  if (error) throw new Error('Failed to insert execution into ejecuciones.ejecucion');
+
+  return { ...(data as Record<string, unknown>), etapa_label: null } as Ejecucion;
 }

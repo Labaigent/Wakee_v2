@@ -1,5 +1,5 @@
 // React
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 // External libraries
 import { toast } from 'sonner';
@@ -32,6 +32,10 @@ import { StepMensajes } from './steps/Step_7_Mensajes';
 
 const SESSION_ID = 'session-001';
 
+interface SegmentacionProps {
+  initialExecutionId?: number | null;
+}
+
 /** Convierte el id numérico de ejecución a un código amigable para la UI (ej. 1 → E-001, 10 → E-010). Sin "3" en el prefijo. */
 function formatExecutionDisplayId(id: number | string): string {
   const n = typeof id === 'number' ? id : parseInt(String(id).replace(/^exec-/, ''), 10);
@@ -41,7 +45,7 @@ function formatExecutionDisplayId(id: number | string): string {
 }
 
 
-export function Segmentacion() {
+export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
   // --- Data ---
   const { data: ejecuciones = [], isLoading: ejecucionesLoading } = useEjecucionesQuery();
 
@@ -49,6 +53,13 @@ export function Segmentacion() {
   const [currentStep, setCurrentStep] = useState<SegmentacionStep>('intro');
   const [maxReachedStep, setMaxReachedStep] = useState<SegmentacionStep>('intro');
   const [selectedExecutionId, setSelectedExecutionId] = useState<number | null>(null);
+
+  // Sincroniza cuando llega un initialExecutionId desde NuevaSesion
+  useEffect(() => {
+    if (initialExecutionId != null) {
+      setSelectedExecutionId(initialExecutionId);
+    }
+  }, [initialExecutionId]);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   // Estado compartido por pasos ICP → Búsqueda (StepIcp, StepPersona, StepFiltro, StepBusqueda)
   const [selectedIcp, setSelectedIcp] = useState('');
