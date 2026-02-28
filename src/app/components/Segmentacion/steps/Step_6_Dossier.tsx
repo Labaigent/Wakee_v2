@@ -1,16 +1,21 @@
+// React
 import { useState } from 'react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { 
-  ChevronDown, 
+
+// External libraries
+import {
+  ChevronDown,
   ChevronUp,
   Mail,
   Building2,
   Briefcase,
   Target,
   TrendingUp,
-  Users
+  Users,
 } from 'lucide-react';
+
+// Internal — components
+import { Button } from '../../ui/button';
+import { Badge } from '../../ui/badge';
 
 interface Lead {
   id: string;
@@ -28,16 +33,17 @@ interface Lead {
   };
 }
 
-interface LeadDossierProps {
+interface StepDossierProps {
   sessionId: string;
   selectedLeads: string[];
   onGenerateEmails: () => void;
 }
 
-export function LeadDossier({ selectedLeads, onGenerateEmails }: LeadDossierProps) {
+export function StepDossier({ selectedLeads, onGenerateEmails }: StepDossierProps) {
+  // --- State ---
   const [expandedLead, setExpandedLead] = useState<string | null>(null);
 
-  // Mock data - esto vendría del backend después de E9
+  // Mock: datos vendrían del backend después de E9
   const leads: Lead[] = [
     {
       id: 'lead-1',

@@ -3,6 +3,7 @@ import type { SenalMercado } from '../types/db/senalMercado';
 import type { GanchoMercado } from '../types/db/ganchoMercado';
 import type { Semana } from '../types/db/semana';
 import type { InputEstrategicoOption } from '../types/db/inputEstrategico';
+import type { Ejecucion } from '../types/db/ejecucion';
 
 /**
  * Fetch market signals for a given week from Supabase
@@ -187,7 +188,7 @@ export async function fetchInputsEstrategicos(): Promise<InputEstrategicoOption[
     const { data, error } = await supabase
       .schema('config')
       .from('inputs_estrategicos')
-      .select('category, subcategory')
+      .select('id, category, subcategory')
       .order('category', { ascending: true })
       .order('subcategory', { ascending: true });
 
@@ -207,4 +208,66 @@ export async function fetchInputsEstrategicos(): Promise<InputEstrategicoOption[
   } catch {
     throw new Error('Failed to retrieve strategic inputs from config.inputs_estrategicos');
   }
+}
+
+/**
+ * Fetch all executions from Supabase
+ *
+ * Purpose: Retrieves all `ejecucion` records from the `ejecuciones` schema,
+ * ordered by start date descending (most recent first). Used by the
+ * Segmentacion component to populate the execution dropdown.
+ *
+ * @returns {Promise<Ejecucion[]>} Array of execution records
+ * Returns empty array if Supabase is unavailable
+ */
+export async function fetchEjecuciones(): Promise<Ejecucion[]> {
+  if (!isSupabaseAvailable() || !supabase) {
+    console.warn('[supabaseService] Supabase is not available - returning empty ejecuciones list');
+    return [];
+  }
+  try {
+    // Fetch both in parallel — config.etapas labels are used to enrich ejecucion rows
+    const [etapasResult, ejecucionesResult] = await Promise.all([
+      supabase.schema('config').from('etapas').select('id, label'),
+      supabase.schema('ejecuciones').from('ejecucion').select('*').order('id', { ascending: false }),
+    ]);
+
+    if (etapasResult.error) throw etapasResult.error;
+    if (ejecucionesResult.error) throw ejecucionesResult.error;
+
+    const labelMap = new Map(
+      (etapasResult.data ?? []).map((e) => [e.id as number, e.label as string])
+    );
+
+    return (ejecucionesResult.data ?? []).map((ej) => ({
+      ...ej,
+      etapa_label: labelMap.get(ej.etapa_siguiente) ?? null,
+    }));
+  } catch {
+    throw new Error('Failed to retrieve executions from ejecuciones.ejecucion');
+  }
+}
+
+/**
+ * Insert a new execution record into Supabase
+ *
+ * Purpose: Creates a new `ejecucion` row in the `ejecuciones` schema
+ * with the current timestamp as both start and last-updated dates.
+ * etapa_siguiente is always 3 for newly created sessions.
+ *
+ * @returns {Promise<Ejecucion>} The newly created execution record (with generated id)
+ * @throws If Supabase is unavailable or the insert fails
+ */
+export async function insertEjecucion(inputsEstrategicosId: number): Promise<Ejecucion> {
+  if (!isSupabaseAvailable() || !supabase) {
+    throw new Error('[supabaseService] Supabase is not available — cannot insert ejecucion');
+  }
+
+  const { data, error } = await supabase
+    .rpc('crear_ejecucion', { p_inputs_estrategicos_id: inputsEstrategicosId })
+    .single();
+
+  if (error) throw new Error('Failed to insert execution into ejecuciones.ejecucion');
+
+  return { ...(data as Record<string, unknown>), etapa_label: null } as Ejecucion;
 }

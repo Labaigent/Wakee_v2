@@ -1,20 +1,27 @@
-import { useState } from 'react';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
-import { Label } from './ui/label';
-import { Progress } from './ui/progress';
+// React
+import { useState, useEffect } from 'react';
+
+// External libraries
 import { toast } from 'sonner';
-import { copyToClipboard } from '../utils/clipboard';
-import { 
+import {
   Copy,
   Check,
   Mail,
   Sparkles,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
 } from 'lucide-react';
+
+// Internal — components
+import { Button } from '../../ui/button';
+import { Textarea } from '../../ui/textarea';
+import { Input } from '../../ui/input';
+import { Badge } from '../../ui/badge';
+import { Label } from '../../ui/label';
+import { Progress } from '../../ui/progress';
+
+// Internal — utils
+import { copyToClipboard } from '../../../utils/clipboard';
 
 interface EmailDraft {
   id: string;
@@ -25,13 +32,14 @@ interface EmailDraft {
   body: string;
 }
 
-interface EmailDraftsProps {
+interface StepMensajesProps {
   sessionId: string;
   selectedLeads: string[];
   onComplete: () => void;
 }
 
-export function EmailDrafts({ onComplete }: EmailDraftsProps) {
+export function StepMensajes({ onComplete }: StepMensajesProps) {
+  // --- State ---
   const [isGenerating, setIsGenerating] = useState(true);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStatus, setGenerationStatus] = useState('');
@@ -40,8 +48,8 @@ export function EmailDrafts({ onComplete }: EmailDraftsProps) {
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [emailDrafts, setEmailDrafts] = useState<EmailDraft[]>([]);
 
-  // Simular generación de correos (E10+E11)
-  useState(() => {
+  // Simulación generación de correos (E10+E11)
+  useEffect(() => {
     const generateEmails = async () => {
       const stages = [
         { progress: 20, status: 'Analizando contexto de cada lead...' },
@@ -195,8 +203,9 @@ Cushman & Wakefield Colombia`
     };
 
     generateEmails();
-  });
+  }, []);
 
+  // --- Handlers ---
   const handleRetry = () => {
     setIsGenerating(true);
     setGenerationFailed(false);

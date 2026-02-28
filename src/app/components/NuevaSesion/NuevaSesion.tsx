@@ -4,17 +4,19 @@ import { useState, useEffect } from "react";
 // External libraries
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from '@tanstack/react-query';
 
 // Internal — types
 import type { SenalMercado } from '../../../types/db/senalMercado';
 import type { GanchoMercado } from '../../../types/db/ganchoMercado';
+import type { InputEstrategicoOption } from '../../../types/db/inputEstrategico';
 
 // Internal — services
-import { fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos } from '../../../services/supabaseService';
-import { triggerE3NuevaSesion } from '../../../services/n8nService';
+import { fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos, insertEjecucion } from '../../../services/supabaseService';
 
 // Internal — queries
 import { useSemanasQuery } from '../../queries/semanas';
+import { EJECUCIONES_QUERY_KEY } from '../../queries/ejecuciones';
 
 // Internal — components
 import { Button } from "../ui/button";
@@ -32,7 +34,7 @@ import { SenalesMercado } from './SenalesMercado';
 import { GanchosMercado } from './GanchosMercado';
 
 interface NuevaSesionProps {
-  onComplete: () => void;
+  onComplete: (executionId: number) => void;
 }
 
 /**
@@ -45,11 +47,12 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
   // --- State (form) ---
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    brokerName: "",
+    brokerName: "Test",
     operationalFocus: "",
     assetClass: "",
     additionalContext: "",
   });
+  const queryClient = useQueryClient();
 
   // --- State (data layer) ---
   const { data: semanas = [], isLoading: isLoadingSemanas } = useSemanasQuery();
@@ -58,6 +61,7 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
   const [cargandoInputs, setCargandoInputs] = useState(false);
   const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
   const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
+  const [inputsEstrategicos, setInputsEstrategicos] = useState<InputEstrategicoOption[]>([]);
   const [opcionesFocoOperativo, setOpcionesFocoOperativo] = useState<string[]>([]);
   const [opcionesAssetClass, setOpcionesAssetClass] = useState<string[]>([]);
 
@@ -87,6 +91,8 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
     setCargandoInputs(true);
     fetchInputsEstrategicos()
       .then(data => {
+        setInputsEstrategicos(data);
+
         const categorias = Array.from(
           new Set(
             data
@@ -126,16 +132,20 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
     setIsSubmitting(true);
 
     try {
-      toast.success("Sesión iniciada. Te notificaremos cuando las propuestas de ICP estén listas.");
-      await triggerE3NuevaSesion({
-        brokerName: formData.brokerName,
-        operationalFocus: formData.operationalFocus,
-        assetClass: formData.assetClass,
-        additionalContext: formData.additionalContext,
-        semanaId: currentSemana.id,
-        semanaFechaInicio: currentSemana.fecha_inicio_semana,
-      });
-      onComplete();
+      const inputMatch = inputsEstrategicos.find(
+        row => row.category === formData.operationalFocus && row.subcategory === formData.assetClass
+      );
+      if (!inputMatch) throw new Error('No se encontró la combinación de foco operativo y asset class');
+
+      const nuevaEjecucion = await insertEjecucion(inputMatch.id);
+
+      // refetchQueries (no invalidateQueries) — espera que el fetch complete
+      // para que el nuevo registro ya esté en cache antes de navegar
+      await queryClient.refetchQueries({ queryKey: EJECUCIONES_QUERY_KEY });
+
+      toast.success("Sesión iniciada. Redirigiendo a Segmentación…");
+
+      onComplete(nuevaEjecucion.id);
     } catch {
       toast.error("Error al iniciar la sesión. Intenta de nuevo.");
     } finally {
@@ -172,8 +182,8 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
                 <Input
                   id="brokerName"
                   value={formData.brokerName}
-                  onChange={(e) => handleChange("brokerName", e.target.value)}
-                  className="mt-2"
+                  readOnly
+                  className="mt-2 bg-gray-50 cursor-not-allowed"
                   placeholder="Tu nombre completo"
                   required
                 />

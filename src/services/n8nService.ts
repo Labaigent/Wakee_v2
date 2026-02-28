@@ -12,8 +12,8 @@
 /** Webhook URL for triggering the Master Intelligence Report update workflow */
 const MASTER_REPORT_WEBHOOK_URL = import.meta.env.VITE_N8N_MASTER_REPORT_WEBHOOK_URL;
 
-/** Webhook URL for triggering the E3 Nueva Sesion prospecting workflow */
-const E3_NUEVA_SESION_WEBHOOK_URL = import.meta.env.VITE_N8N_E3_NUEVA_SESION_WEBHOOK_URL;
+/** Webhook URL for triggering the E3 ICP strategy workflow */
+const E3_ICP_WEBHOOK_URL = import.meta.env.VITE_N8N_E3_ICP_WEBHOOK_URL;
 
 /** Payload sent to the E3 Nueva Sesion webhook */
 export interface E3NuevaSesionPayload {
@@ -23,6 +23,13 @@ export interface E3NuevaSesionPayload {
   additionalContext: string;
   semanaId: number;
   semanaFechaInicio: string; // "YYYY-MM-DD"
+}
+
+/** Payload sent to the E3 ICP webhook */
+export interface E3IcpPayload {
+  perfil_id: number;
+  ejecucion_id: number;
+  semana_id: number;
 }
 
 /**
@@ -50,24 +57,25 @@ export async function triggerMasterReportUpdate(): Promise<void> {
 }
 
 /**
- * Trigger the E3 Nueva Sesion prospecting workflow in n8n
+ * Trigger the E3 ICP strategy workflow in n8n
  *
  * Purpose: Sends a POST request to the n8n webhook to start the automation
- * that initiates a new prospecting session (ICP proposals, buyer persona, leads).
+ * that generates ICP proposals for the selected execution. The webhook holds
+ * the response until the workflow completes and the ICP data is ready in the DB.
  *
- * @param payload - Broker form data plus the current semana context
+ * @param payload - Perfil, execution, and week context required by the workflow
  * @throws {Error} If the webhook responds with a non-OK HTTP status
  *
  * @example
  * try {
- *   await triggerE3NuevaSesion({ brokerName: 'Juan', ... });
- *   toast.success('Sesión iniciada');
- * } catch (error) {
- *   toast.error('Error al iniciar la sesión');
+ *   await triggerE3Icp({ perfil_id: 1, ejecucion_id: 3, semana_id: 2 });
+ *   toast.success('Estrategia iniciada.');
+ * } catch {
+ *   toast.error('Error al iniciar la estrategia. Intenta de nuevo.');
  * }
  */
-export async function triggerE3NuevaSesion(payload: E3NuevaSesionPayload): Promise<void> {
-  const response = await fetch(E3_NUEVA_SESION_WEBHOOK_URL, {
+export async function triggerE3Icp(payload: E3IcpPayload): Promise<void> {
+  const response = await fetch(E3_ICP_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -77,3 +85,4 @@ export async function triggerE3NuevaSesion(payload: E3NuevaSesionPayload): Promi
     throw new Error(`[n8nService] Webhook error: ${response.status}`);
   }
 }
+

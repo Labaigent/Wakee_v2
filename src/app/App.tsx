@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { PerfilProvider } from "./context/PerfilContext";
 import {
   Tabs,
   TabsContent,
@@ -7,17 +9,28 @@ import {
 } from "./components/ui/tabs";
 import { Dashboard } from "./components/Dashboard";
 import { NuevaSesion } from "./components/NuevaSesion/NuevaSesion";
-import { PendingTasks } from "./components/PendingTasks";
+import { Segmentacion } from "./components/Segmentacion/Segmentacion";
 import { SessionHistory } from "./components/SessionHistory";
 import { ActiveLeads } from "./components/ActiveLeads";
 import { MasterIntelligenceReport } from "./components/MasterReport/MasterIntelligenceReport";
 import { Toaster } from "./components/ui/sonner";
+import { EJECUCIONES_QUERY_KEY } from "./queries/ejecuciones";
 
 // App principal de Wakee - Prospección Inteligente C&W
 function App() {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [pendingEjecucionId, setPendingEjecucionId] = useState<number | null>(null);
+
+  const handleTabChange = (tab: string) => {
+    if (tab === "pending") {
+      queryClient.refetchQueries({ queryKey: EJECUCIONES_QUERY_KEY });
+    }
+    setActiveTab(tab);
+  };
 
   return (
+    <PerfilProvider>
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-[#1F554A] text-white border-b border-[#1F554A]">
@@ -46,7 +59,7 @@ function App() {
       {/* Navigation */}
       <div className="border-b border-[#DCDEDC] bg-white overflow-x-auto">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <TabsList className="bg-transparent border-0 p-0 h-auto flex whitespace-nowrap">
               <TabsTrigger
                 value="dashboard"
@@ -99,11 +112,14 @@ function App() {
           </TabsContent>
           <TabsContent value="new-session" className="mt-0">
             <NuevaSesion
-              onComplete={() => setActiveTab("pending")}
+              onComplete={(executionId) => {
+                setPendingEjecucionId(executionId);
+                handleTabChange("pending");
+              }}
             />
           </TabsContent>
           <TabsContent value="pending" className="mt-0">
-            <PendingTasks />
+            <Segmentacion initialExecutionId={pendingEjecucionId} />
           </TabsContent>
           <TabsContent value="history" className="mt-0">
             <SessionHistory />
@@ -119,6 +135,7 @@ function App() {
 
       <Toaster />
     </div>
+    </PerfilProvider>
   );
 }
 
