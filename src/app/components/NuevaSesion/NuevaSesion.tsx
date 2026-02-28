@@ -145,16 +145,6 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
 
       toast.success("Sesión iniciada. Redirigiendo a Segmentación…");
 
-      // TODO: Re-habilitar el trigger de n8n cuando el workflow E3 esté listo
-      // await triggerE3NuevaSesion({
-      //   brokerName: formData.brokerName,
-      //   operationalFocus: formData.operationalFocus,
-      //   assetClass: formData.assetClass,
-      //   additionalContext: formData.additionalContext,
-      //   semanaId: currentSemana.id,
-      //   semanaFechaInicio: currentSemana.fecha_inicio_semana,
-      // });
-
       onComplete(nuevaEjecucion.id);
     } catch {
       toast.error("Error al iniciar la sesión. Intenta de nuevo.");

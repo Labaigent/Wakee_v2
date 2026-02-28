@@ -89,31 +89,3 @@ export async function triggerE3Icp(payload: E3IcpPayload): Promise<void> {
   }
 }
 
-/**
- * Trigger the E3 Nueva Sesion prospecting workflow in n8n
- *
- * Purpose: Sends a POST request to the n8n webhook to start the automation
- * that initiates a new prospecting session (ICP proposals, buyer persona, leads).
- *
- * @param payload - Broker form data plus the current semana context
- * @throws {Error} If the webhook responds with a non-OK HTTP status
- *
- * @example
- * try {
- *   await triggerE3NuevaSesion({ brokerName: 'Juan', ... });
- *   toast.success('Sesión iniciada');
- * } catch (error) {
- *   toast.error('Error al iniciar la sesión');
- * }
- */
-export async function triggerE3NuevaSesion(payload: E3NuevaSesionPayload): Promise<void> {
-  const response = await fetch(E3_NUEVA_SESION_WEBHOOK_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`[n8nService] Webhook error: ${response.status}`);
-  }
-}
