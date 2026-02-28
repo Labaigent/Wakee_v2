@@ -46,6 +46,29 @@ export function isStepUnlocked(step: SegmentacionStep, maxReachedStep: Segmentac
   return getStepIndex(step) <= getStepIndex(maxReachedStep);
 }
 
+/** Etapa de inicio para una ejecución nueva (siempre arranca en intro). */
+export const ETAPA_INTRO = 3;
+
+/** Mapeo de etapa_siguiente (BD numérico) → step de UI. */
+export const ETAPA_TO_STEP: Record<number, SegmentacionStep> = {
+  3: 'intro',
+  4: 'icp',
+  5: 'persona',
+  6: 'filtro',
+  7: 'busqueda',
+  8: 'ranking',
+  9: 'dossier',
+  10: 'mensajes',
+};
+
+/**
+ * Convierte etapa_siguiente (número de BD) al step de UI correspondiente.
+ * Si el número no está en el mapa, devuelve 'intro' como fallback seguro.
+ */
+export function getStepForEtapa(etapaSiguiente: number): SegmentacionStep {
+  return ETAPA_TO_STEP[etapaSiguiente] ?? 'intro';
+}
+
 /**
  * Opciones de ICP (Ideal Customer Profile) para el Wizard.
  * Mapeado desde E3IcpOutput (ejecuciones.e3_ejecucion_outpu_icp).

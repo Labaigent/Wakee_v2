@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 // Internal — types
 import type { SegmentacionStep } from './types';
-import { getStepIndex, SEGMENTACION_STEP_ORDER } from './types';
+import { getStepIndex, getStepForEtapa, SEGMENTACION_STEP_ORDER } from './types';
 
 // Internal — context
 import { usePerfilContext } from '@/app/context/PerfilContext';
@@ -134,8 +134,30 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
     }
   };
 
+  // Maneja la selección de ejecución en el dropdown.
+  // Si la ejecución ya tiene progreso (etapa > intro), navega automáticamente al paso correspondiente.
+  const handleExecutionSelect = (rawValue: string) => {
+    const executionId = rawValue !== '' ? Number(rawValue) : null;
+    setSelectedExecutionId(executionId);
+
+    if (executionId == null) return;
+
+    const ejecucion = ejecuciones.find((ej) => ej.id === executionId);
+    if (!ejecucion) return;
+
+    const targetStep = getStepForEtapa(ejecucion.etapa_siguiente);
+
+    // Solo navegar si la ejecución ya tiene progreso más allá del intro
+    if (targetStep !== 'intro') {
+      setCurrentStep(targetStep);
+      setMaxReachedStep(targetStep);
+    }
+  };
+
   const handleCancelToIntro = () => {
     setCurrentStep('intro');
+    setMaxReachedStep('intro');
+    setSelectedExecutionId(null);
   };
 
   const handleStepNavClick = (step: Exclude<SegmentacionStep, 'intro'>) => {
@@ -170,9 +192,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
               </Label>
               <Select
                 value={selectedExecutionId != null ? String(selectedExecutionId) : undefined}
-                onValueChange={(v) =>
-                  setSelectedExecutionId(v != null && v !== '' ? Number(v) : null)
-                }
+                onValueChange={handleExecutionSelect}
               >
                 <SelectTrigger
                   id="ejecucion-select"
