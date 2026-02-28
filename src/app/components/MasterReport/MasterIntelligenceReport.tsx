@@ -1,5 +1,5 @@
 // React
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 // External libraries
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,16 +7,15 @@ import { toast } from 'sonner';
 import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Calendar, Building2, TrendingUp } from 'lucide-react';
 
 // Internal — services
-import { fetchSenalesMercado, fetchGanchosMercado } from '../../../services/supabaseService';
 import { triggerMasterReportUpdate } from '../../../services/n8nService';
 
 // Internal — types
-import type { SenalMercado } from '../../../types/db/senalMercado';
-import type { GanchoMercado } from '../../../types/db/ganchoMercado';
 import type { CategoryTab } from './types';
 
 // Internal — queries
 import { useSemanasQuery, SEMANAS_QUERY_KEY } from '../../queries/semanas';
+import { useSenalesMercadoQuery, SENALES_MERCADO_QUERY_KEY } from '../../queries/senalesMercado';
+import { useGanchosMercadoQuery, GANCHOS_MERCADO_QUERY_KEY } from '../../queries/ganchosMercado';
 
 // Internal — components
 import { Button } from '../ui/button';
@@ -29,44 +28,19 @@ export function MasterIntelligenceReport() {
   const queryClient = useQueryClient();
   const { data: semanas = [], isLoading: isLoadingSemanas } = useSemanasQuery();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [cargandoSeñales, setCargandoSeñales] = useState(false);
-  const [cargandoGanchos, setCargandoGanchos] = useState(false);
   const [expandedSeñales, setExpandedSeñales] = useState<number[]>([]);
   const [expandedGanchos, setExpandedGanchos] = useState<number[]>([]);
   const [indiceSemana, setIndiceSemana] = useState(0);
   const [activeTab, setActiveTab] = useState<CategoryTab>('senales');
-  const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
-  const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
 
   // Derived from state
   const currentSemana = semanas[indiceSemana]; // drives fetchSenalesMercado + fetchGanchosMercado
   // Refresh only makes sense on the latest week — triggering n8n on a past week would overwrite current data
   const isLatestWeek = indiceSemana === 0;
 
-  // Re-fetch signals whenever the active week changes.
-  // Watching currentSemana?.id (not the object) avoids re-runs on unrelated reference updates.
-  useEffect(() => {
-    if (!currentSemana?.id) return;
-    setCargandoSeñales(true);
-    fetchSenalesMercado({ semanaId: currentSemana.id })
-      .then(data => {
-        setSenalesMercado(data);
-        setCargandoSeñales(false);
-      })
-      .catch(() => setCargandoSeñales(false));
-  }, [currentSemana?.id]);
-
-  // Re-fetch ganchos whenever the active week changes.
-  useEffect(() => {
-    if (!currentSemana?.id) return;
-    setCargandoGanchos(true);
-    fetchGanchosMercado({ semanaId: currentSemana.id })
-      .then(data => {
-        setGanchosMercado(data);
-        setCargandoGanchos(false);
-      })
-      .catch(() => setCargandoGanchos(false));
-  }, [currentSemana?.id]);
+  const semanaId = currentSemana?.id ?? null;
+  const { data: senalesMercado = [], isLoading: cargandoSeñales } = useSenalesMercadoQuery(semanaId);
+  const { data: ganchosMercado = [], isLoading: cargandoGanchos } = useGanchosMercadoQuery(semanaId);
 
   // --- Helpers ---
   const formatSemanaLabel = (dateStr: string) =>
@@ -88,27 +62,14 @@ export function MasterIntelligenceReport() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Wait for n8n to finish the full workflow before re-fetching — see n8nService.ts
-      
-      setCargandoSeñales(true);
-      setCargandoGanchos(true);
       await triggerMasterReportUpdate();
-
-      // n8n confirmed DB is updated — invalida caché de semanas y re-fetch datasets
-      await queryClient.invalidateQueries({ queryKey: SEMANAS_QUERY_KEY });
-
-      const [señales, ganchos] = await Promise.all([
-        fetchSenalesMercado({ semanaId: currentSemana.id }),
-        fetchGanchosMercado({ semanaId: currentSemana.id }),
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: SEMANAS_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: SENALES_MERCADO_QUERY_KEY(currentSemana.id) }),
+        queryClient.invalidateQueries({ queryKey: GANCHOS_MERCADO_QUERY_KEY(currentSemana.id) }),
       ]);
-      setSenalesMercado(señales);
-      setGanchosMercado(ganchos);
-      setCargandoSeñales(false);
-      setCargandoGanchos(false);
       toast.success('Reporte actualizado con datos recientes');
     } catch (error) {
-      setCargandoSeñales(false);
-      setCargandoGanchos(false);
       toast.error('Error al actualizar. Intenta de nuevo.');
     } finally {
       setIsRefreshing(false);

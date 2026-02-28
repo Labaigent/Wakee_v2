@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 
 // External libraries
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 // Internal — types
@@ -12,7 +13,7 @@ import { getStepIndex, getStepForEtapa, SEGMENTACION_STEP_ORDER } from './types'
 import { usePerfilContext } from '@/app/context/PerfilContext';
 
 // Internal — queries
-import { useEjecucionesQuery } from '@/app/queries/ejecuciones';
+import { useEjecucionesQuery, EJECUCIONES_QUERY_KEY } from '@/app/queries/ejecuciones';
 
 // Internal — services
 import { triggerE3Icp } from '@/services/n8nService';
@@ -54,6 +55,7 @@ function formatExecutionDisplayId(id: number | string): string {
 export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
   // --- Context ---
   const { perfilId } = usePerfilContext();
+  const queryClient = useQueryClient();
 
   // --- Data ---
   const { data: ejecuciones = [], isLoading: ejecucionesLoading } = useEjecucionesQuery();
@@ -155,6 +157,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
   };
 
   const handleCancelToIntro = () => {
+    queryClient.invalidateQueries({ queryKey: EJECUCIONES_QUERY_KEY });
     setCurrentStep('intro');
     setMaxReachedStep('intro');
     setSelectedExecutionId(null);

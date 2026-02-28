@@ -7,16 +7,16 @@ import { Loader2 } from "lucide-react";
 import { useQueryClient } from '@tanstack/react-query';
 
 // Internal — types
-import type { SenalMercado } from '../../../types/db/senalMercado';
-import type { GanchoMercado } from '../../../types/db/ganchoMercado';
 import type { InputEstrategicoOption } from '../../../types/db/inputEstrategico';
 
 // Internal — services
-import { fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos, insertEjecucion } from '../../../services/supabaseService';
+import { fetchInputsEstrategicos, insertEjecucion } from '../../../services/supabaseService';
 
 // Internal — queries
 import { useSemanasQuery } from '../../queries/semanas';
 import { EJECUCIONES_QUERY_KEY } from '../../queries/ejecuciones';
+import { useSenalesMercadoQuery } from '../../queries/senalesMercado';
+import { useGanchosMercadoQuery } from '../../queries/ganchosMercado';
 
 // Internal — components
 import { Button } from "../ui/button";
@@ -56,11 +56,7 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
 
   // --- State (data layer) ---
   const { data: semanas = [], isLoading: isLoadingSemanas } = useSemanasQuery();
-  const [cargandoSeñales, setCargandoSeñales] = useState(false);
-  const [cargandoGanchos, setCargandoGanchos] = useState(false);
   const [cargandoInputs, setCargandoInputs] = useState(false);
-  const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
-  const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
   const [inputsEstrategicos, setInputsEstrategicos] = useState<InputEstrategicoOption[]>([]);
   const [opcionesFocoOperativo, setOpcionesFocoOperativo] = useState<string[]>([]);
   const [opcionesAssetClass, setOpcionesAssetClass] = useState<string[]>([]);
@@ -68,23 +64,9 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
   // NuevaSesion siempre muestra la semana más reciente (sin navegación).
   const currentSemana = semanas[0];
 
-  // Re-fetcha señales cuando resuelve la semana activa.
-  useEffect(() => {
-    if (!currentSemana?.id) return;
-    setCargandoSeñales(true);
-    fetchSenalesMercado({ semanaId: currentSemana.id })
-      .then(data => { setSenalesMercado(data); setCargandoSeñales(false); })
-      .catch(() => setCargandoSeñales(false));
-  }, [currentSemana?.id]);
-
-  // Re-fetcha ganchos cuando resuelve la semana activa.
-  useEffect(() => {
-    if (!currentSemana?.id) return;
-    setCargandoGanchos(true);
-    fetchGanchosMercado({ semanaId: currentSemana.id })
-      .then(data => { setGanchosMercado(data); setCargandoGanchos(false); })
-      .catch(() => setCargandoGanchos(false));
-  }, [currentSemana?.id]);
+  const semanaId = currentSemana?.id ?? null;
+  const { data: senalesMercado = [], isLoading: cargandoSeñales } = useSenalesMercadoQuery(semanaId);
+  const { data: ganchosMercado = [], isLoading: cargandoGanchos } = useGanchosMercadoQuery(semanaId);
 
   // Carga inputs estratégicos para poblar los dropdowns.
   useEffect(() => {
