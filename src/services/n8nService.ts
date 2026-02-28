@@ -12,9 +12,6 @@
 /** Webhook URL for triggering the Master Intelligence Report update workflow */
 const MASTER_REPORT_WEBHOOK_URL = import.meta.env.VITE_N8N_MASTER_REPORT_WEBHOOK_URL;
 
-/** Webhook URL for triggering the E3 Nueva Sesion prospecting workflow */
-const E3_NUEVA_SESION_WEBHOOK_URL = import.meta.env.VITE_N8N_E3_NUEVA_SESION_WEBHOOK_URL;
-
 /** Webhook URL for triggering the E3 ICP strategy workflow */
 const E3_ICP_WEBHOOK_URL = import.meta.env.VITE_N8N_E3_ICP_WEBHOOK_URL;
 

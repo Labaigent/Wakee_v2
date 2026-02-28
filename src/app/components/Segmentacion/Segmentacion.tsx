@@ -28,7 +28,7 @@ import {
 } from '../ui/select';
 import { SegmentacionStepNav } from './SegmentacionStepNav';
 import { StepIntro } from './steps/Step_0_Intro';
-import { StepIcp } from './steps/Step_1_Icp';
+import { StepIcp } from './steps/Step_1_Icp/Step_1_Icp';
 import { StepPersona } from './steps/Step_2_Persona';
 import { StepFiltro } from './steps/Step_3_Filtro';
 import { StepBusqueda } from './steps/Step_4_Busqueda';

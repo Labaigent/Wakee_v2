@@ -45,3 +45,24 @@ export function isStepUnlocked(step: SegmentacionStep, maxReachedStep: Segmentac
   if (step === 'intro') return true;
   return getStepIndex(step) <= getStepIndex(maxReachedStep);
 }
+
+/**
+ * Opciones de ICP (Ideal Customer Profile) para el Wizard.
+ * Incluye metadatos estratégicos, señales de mercado y criterios de calificación.
+ */
+export interface IcpOption {
+  id: string;
+  name: string;
+  market_signal: {
+    description: string;
+    source_name: string;
+    source_url: string;
+  };
+  industry_specific: string[];
+  use_case_activated: string;
+  target_entity_type: string;
+  capex_intensity: string;
+  score_strategic: number;
+  strategic_pain_addressed: string;
+  opportunity_window: string;
+}
