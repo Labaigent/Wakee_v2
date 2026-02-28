@@ -8,8 +8,14 @@ import { toast } from 'sonner';
 import type { SegmentacionStep } from './types';
 import { getStepIndex, SEGMENTACION_STEP_ORDER } from './types';
 
+// Internal — context
+import { usePerfilContext } from '@/app/context/PerfilContext';
+
 // Internal — queries
 import { useEjecucionesQuery } from '@/app/queries/ejecuciones';
+
+// Internal — services
+import { triggerE3Icp } from '@/services/n8nService';
 
 // Internal — components
 import { Label } from '../ui/label';
@@ -46,6 +52,9 @@ function formatExecutionDisplayId(id: number | string): string {
 
 
 export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
+  // --- Context ---
+  const { perfilId } = usePerfilContext();
+
   // --- Data ---
   const { data: ejecuciones = [], isLoading: ejecucionesLoading } = useEjecucionesQuery();
 
@@ -60,6 +69,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
       setSelectedExecutionId(initialExecutionId);
     }
   }, [initialExecutionId]);
+  const [isStartingWizard, setIsStartingWizard] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
   // Estado compartido por pasos ICP → Búsqueda (StepIcp, StepPersona, StepFiltro, StepBusqueda)
   const [selectedIcp, setSelectedIcp] = useState('');
@@ -89,19 +99,39 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
   }, []);
 
   // --- Handlers ---
-  const handleStartWizard = () => {
+  const handleStartWizard = async () => {
     if (selectedExecutionId == null) {
       toast.error('Selecciona una ejecución para continuar');
-      return;
+      return; // guard — must have execution before entering loading state
     }
-    setSelectedLeads([]);
-    setSelectedIcp('');
-    setExpandedIcp(null);
-    setPersonaEdits('');
-    setProcessingProgress(0);
-    setProcessingStatus('');
-    setCurrentStep('icp');
-    setMaxReachedStep('icp');
+
+    const ejecucion = ejecuciones.find((ej) => ej.id === selectedExecutionId);
+    if (!ejecucion?.semana_id) {
+      toast.error('La ejecución seleccionada no tiene semana asignada');
+      return; // guard — semana_id is required for the ICP workflow
+    }
+
+    setIsStartingWizard(true);
+
+    try {
+      await triggerE3Icp({
+        perfil_id: perfilId,
+        ejecucion_id: selectedExecutionId,
+        semana_id: ejecucion.semana_id,
+      });
+      setSelectedLeads([]);
+      setSelectedIcp('');
+      setExpandedIcp(null);
+      setPersonaEdits('');
+      setProcessingProgress(0);
+      setProcessingStatus('');
+      setCurrentStep('icp');
+      setMaxReachedStep('icp');
+    } catch {
+      toast.error('Error al iniciar la estrategia. Intenta de nuevo.');
+    } finally {
+      setIsStartingWizard(false);
+    }
   };
 
   const handleCancelToIntro = () => {
@@ -212,6 +242,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
             title={pendingTasks[0].title}
             phase={pendingTasks[0].phase}
             isExecutionSelected={selectedExecutionId != null}
+            isLoading={isStartingWizard}
             onStartWizard={handleStartWizard}
           />
         )}

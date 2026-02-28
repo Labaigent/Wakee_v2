@@ -188,7 +188,7 @@ export async function fetchInputsEstrategicos(): Promise<InputEstrategicoOption[
     const { data, error } = await supabase
       .schema('config')
       .from('inputs_estrategicos')
-      .select('category, subcategory')
+      .select('id, category, subcategory')
       .order('category', { ascending: true })
       .order('subcategory', { ascending: true });
 
@@ -258,13 +258,13 @@ export async function fetchEjecuciones(): Promise<Ejecucion[]> {
  * @returns {Promise<Ejecucion>} The newly created execution record (with generated id)
  * @throws If Supabase is unavailable or the insert fails
  */
-export async function insertEjecucion(): Promise<Ejecucion> {
+export async function insertEjecucion(inputsEstrategicosId: number): Promise<Ejecucion> {
   if (!isSupabaseAvailable() || !supabase) {
     throw new Error('[supabaseService] Supabase is not available — cannot insert ejecucion');
   }
 
   const { data, error } = await supabase
-    .rpc('crear_ejecucion')
+    .rpc('crear_ejecucion', { p_inputs_estrategicos_id: inputsEstrategicosId })
     .single();
 
   if (error) throw new Error('Failed to insert execution into ejecuciones.ejecucion');

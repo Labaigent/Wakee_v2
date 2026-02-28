@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { PerfilProvider } from "./context/PerfilContext";
 import {
   Tabs,
   TabsContent,
@@ -29,6 +30,7 @@ function App() {
   };
 
   return (
+    <PerfilProvider>
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-[#1F554A] text-white border-b border-[#1F554A]">
@@ -133,6 +135,7 @@ function App() {
 
       <Toaster />
     </div>
+    </PerfilProvider>
   );
 }
 

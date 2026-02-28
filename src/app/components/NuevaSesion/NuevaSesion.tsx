@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 // Internal — types
 import type { SenalMercado } from '../../../types/db/senalMercado';
 import type { GanchoMercado } from '../../../types/db/ganchoMercado';
+import type { InputEstrategicoOption } from '../../../types/db/inputEstrategico';
 
 // Internal — services
 import { fetchSenalesMercado, fetchGanchosMercado, fetchInputsEstrategicos, insertEjecucion } from '../../../services/supabaseService';
@@ -60,6 +61,7 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
   const [cargandoInputs, setCargandoInputs] = useState(false);
   const [senalesMercado, setSenalesMercado] = useState<SenalMercado[]>([]);
   const [ganchosMercado, setGanchosMercado] = useState<GanchoMercado[]>([]);
+  const [inputsEstrategicos, setInputsEstrategicos] = useState<InputEstrategicoOption[]>([]);
   const [opcionesFocoOperativo, setOpcionesFocoOperativo] = useState<string[]>([]);
   const [opcionesAssetClass, setOpcionesAssetClass] = useState<string[]>([]);
 
@@ -89,6 +91,8 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
     setCargandoInputs(true);
     fetchInputsEstrategicos()
       .then(data => {
+        setInputsEstrategicos(data);
+
         const categorias = Array.from(
           new Set(
             data
@@ -128,7 +132,12 @@ export function NuevaSesion({ onComplete }: NuevaSesionProps) {
     setIsSubmitting(true);
 
     try {
-      const nuevaEjecucion = await insertEjecucion();
+      const inputMatch = inputsEstrategicos.find(
+        row => row.category === formData.operationalFocus && row.subcategory === formData.assetClass
+      );
+      if (!inputMatch) throw new Error('No se encontró la combinación de foco operativo y asset class');
+
+      const nuevaEjecucion = await insertEjecucion(inputMatch.id);
 
       // refetchQueries (no invalidateQueries) — espera que el fetch complete
       // para que el nuevo registro ya esté en cache antes de navegar
