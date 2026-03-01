@@ -113,7 +113,7 @@ export function MasterIntelligenceReport() {
           </div>
           {isLatestWeek && <Button
             onClick={handleRefresh}
-            disabled={isRefreshing}
+            disabled={true} //{isRefreshing}
             variant="outline"
             size="sm"
             className="w-full sm:w-auto border-[#1F554A] text-[#1F554A] hover:bg-[#1F554A] hover:text-white"
