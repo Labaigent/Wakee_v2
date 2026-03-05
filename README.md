@@ -7,7 +7,9 @@
 ## Integraciones clave
 
 - **Supabase**: fuentes de datos para señales/ganchos y opciones dinámicas de sesión (inputs estratégicos).
-- **n8n**: webhook para activar flujos de actualización desde `Nueva Sesión`.
+- **n8n**: webhooks para activar flujos de actualización:
+  - `Master Report`: Actualización de inteligencia general.
+  - `E3 ICP`: Generación de propuestas de valor segmentadas (Etapa ICP).
 - **TanStack Query**: caching y revalidación de datos en componentes que consumen Supabase.
 - **Context API (Perfil)**: gestión global de la sesión activa y datos de perfil del usuario.
 
