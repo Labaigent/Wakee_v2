@@ -285,7 +285,7 @@ export async function fetchE3IcpOutputs(ejecucionId: number): Promise<E3IcpOutpu
   try {
     const { data, error } = await supabase
       .schema('ejecuciones')
-      .from('e3_ejecucion_outpu_icp')
+      .from('e3_ejecucion_output_icp')
       .select('*')
       .eq('ejecucion_id', ejecucionId)
       .order('icp_rank', { ascending: true });
