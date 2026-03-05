@@ -5,6 +5,7 @@ import type { Semana } from '../types/db/semana';
 import type { InputEstrategicoOption } from '../types/db/inputEstrategico';
 import type { Ejecucion } from '../types/db/ejecucion';
 import type { E3IcpOutput } from '../types/db/e3IcpOutput';
+import type { E4PersonaOutput } from '../types/db/e4PersonaOutput';
 
 /**
  * Fetch market signals for a given week from Supabase
@@ -293,5 +294,29 @@ export async function fetchE3IcpOutputs(ejecucionId: number): Promise<E3IcpOutpu
     return data ?? [];
   } catch {
     throw new Error('Failed to retrieve E3 ICP outputs from ejecuciones.e3_ejecucion_outpu_icp');
+  }
+}
+
+/**
+ * Obtiene el output de Persona (E4) para una ejecución específica.
+ * Tabla: ejecuciones.e4_ejecucion_output_persona
+ */
+export async function fetchE4PersonaOutput(ejecucionId: number): Promise<E4PersonaOutput | null> {
+  if (!isSupabaseAvailable() || !supabase) {
+    console.warn('[supabaseService] Supabase no disponible - devolviendo null para e4 persona output');
+    return null;
+  }
+  try {
+    const { data, error } = await supabase
+      .schema('ejecuciones')
+      .from('e4_ejecucion_output_persona')
+      .select('*')
+      .eq('ejecucion_id', ejecucionId)
+      .order('id', { ascending: false })
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  } catch {
+    throw new Error('Failed to retrieve E4 persona output from ejecuciones.e4_ejecucion_output_persona');
   }
 }
