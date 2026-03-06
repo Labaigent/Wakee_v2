@@ -29,6 +29,7 @@ interface StepIcpProps {
   onExpandedIcpChange: (id: string | null) => void;
   onConfirm: () => void;
   onCancel: () => void;
+  isCompleted?: boolean;
 }
 
 /** Convierte el output plano de BD (E3) al tipo IcpOption anidado del componente */
@@ -64,6 +65,7 @@ export function StepIcp({
   onExpandedIcpChange,
   onConfirm,
   onCancel,
+  isCompleted = false,
 }: StepIcpProps) {
   const { data: rawOutputs = [], isLoading: icpOutputsLoading } = useE3IcpOutputsQuery(ejecucionId);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,24 +127,29 @@ export function StepIcp({
       <Separator />
 
       {/* Acciones */}
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <Button variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button
-          onClick={handleConfirm}
-          disabled={!selectedIcp || isSubmitting}
-          className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90"
-        >
-          {isSubmitting ? (
-            <Loader2 className="size-4 mr-2 animate-spin" />
-          ) : (
-            <>
-              Confirmar y continuar
-              <ArrowRight className="size-4 ml-2" />
-            </>
+        <div className="flex flex-col items-end gap-1">
+          {isCompleted && (
+            <p className="text-xs text-gray-400">Este paso ya fue ejecutado en esta ejecución.</p>
           )}
-        </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={!selectedIcp || isSubmitting || isCompleted}
+            className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90"
+          >
+            {isSubmitting ? (
+              <Loader2 className="size-4 mr-2 animate-spin" />
+            ) : (
+              <>
+                Confirmar y continuar
+                <ArrowRight className="size-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

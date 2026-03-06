@@ -284,6 +284,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
               updateMaxReached('persona');
             }}
             onCancel={handleCancelToIntro}
+            isCompleted={getStepIndex(maxReachedStep) > getStepIndex('icp')}
           />
         )}
 
