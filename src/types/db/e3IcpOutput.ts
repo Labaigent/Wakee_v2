@@ -26,4 +26,5 @@ export interface E3IcpOutput {
   v_addresses_declared_pain: boolean;
   v_entity_alignment: boolean;
   created_at: string;
+  icp_seleccionado: boolean | null;
 }

@@ -1,5 +1,5 @@
 // Librerías externas
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ArrowRight, Loader2 } from 'lucide-react';
 
@@ -71,6 +71,14 @@ export function StepIcp({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const icpOptions = rawOutputs.map(mapE3IcpOutputToOption);
+
+  // When returning to a completed step (e.g. after page load or session change),
+  // restore selectedIcp from the DB flag icp_seleccionado.
+  useEffect(() => {
+    if (!isCompleted || selectedIcp || rawOutputs.length === 0) return;
+    const selected = rawOutputs.find((o) => o.icp_seleccionado === true);
+    if (selected) onSelectedIcpChange(String(selected.icp_rank));
+  }, [isCompleted, selectedIcp, rawOutputs, onSelectedIcpChange]);
 
   // --- Handlers ---
   const handleConfirm = async () => {
