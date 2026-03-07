@@ -15,6 +15,9 @@ const MASTER_REPORT_WEBHOOK_URL = import.meta.env.VITE_N8N_MASTER_REPORT_WEBHOOK
 /** Webhook URL for triggering the E3 ICP strategy workflow */
 const E3_ICP_WEBHOOK_URL = import.meta.env.VITE_N8N_E3_ICP_WEBHOOK_URL;
 
+/** Webhook URL for triggering the E4 Persona generation workflow */
+const E4_PERSONA_WEBHOOK_URL = import.meta.env.VITE_N8N_E4_PERSONA_WEBHOOK_URL;
+
 /** Payload sent to the E3 Nueva Sesion webhook */
 export interface E3NuevaSesionPayload {
   brokerName: string;
@@ -23,6 +26,13 @@ export interface E3NuevaSesionPayload {
   additionalContext: string;
   semanaId: number;
   semanaFechaInicio: string; // "YYYY-MM-DD"
+}
+
+/** Payload sent to the E4 Persona webhook */
+export interface E4PersonaPayload {
+  perfil_id: number;
+  ejecucion_id: number;
+  icp_rank: number;
 }
 
 /** Payload sent to the E3 ICP webhook */
@@ -76,6 +86,35 @@ export async function triggerMasterReportUpdate(): Promise<void> {
  */
 export async function triggerE3Icp(payload: E3IcpPayload): Promise<void> {
   const response = await fetch(E3_ICP_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`[n8nService] Webhook error: ${response.status}`);
+  }
+}
+
+/**
+ * Trigger the E4 Persona generation workflow in n8n
+ *
+ * Purpose: Sends a POST request to the n8n webhook to start the automation
+ * that generates the Persona profile for the selected ICP.
+ *
+ * @param payload - Perfil, execution, and selected ICP rank
+ * @throws {Error} If the webhook responds with a non-OK HTTP status
+ *
+ * @example
+ * try {
+ *   await triggerE4Persona({ perfil_id: 1, ejecucion_id: 3, icp_rank: 2 });
+ *   toast.success('Proceso iniciado.');
+ * } catch {
+ *   toast.error('Error al iniciar el proceso. Intenta de nuevo.');
+ * }
+ */
+export async function triggerE4Persona(payload: E4PersonaPayload): Promise<void> {
+  const response = await fetch(E4_PERSONA_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

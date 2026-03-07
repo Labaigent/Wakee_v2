@@ -1,6 +1,6 @@
 // External libraries
 import { toast } from 'sonner';
-import { ArrowRight, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 // Internal — components
 import { Button } from '../../ui/button';
@@ -8,10 +8,11 @@ import { Label } from '../../ui/label';
 import { Textarea } from '../../ui/textarea';
 import { Separator } from '../../ui/separator';
 
-// Internal — data
-import { buyerPersona } from '../wizardData';
+// Internal — queries
+import { useE4PersonaOutputQuery } from '@/app/queries/e4PersonaOutput';
 
 interface StepPersonaProps {
+  ejecucionId: number | null;
   personaEdits: string;
   onPersonaEditsChange: (value: string) => void;
   onConfirm: () => void;
@@ -19,11 +20,14 @@ interface StepPersonaProps {
 }
 
 export function StepPersona({
+  ejecucionId,
   personaEdits,
   onPersonaEditsChange,
   onConfirm,
   onBack,
 }: StepPersonaProps) {
+  const { data: persona, isLoading } = useE4PersonaOutputQuery(ejecucionId);
+
   // --- Handlers ---
   const handleConfirm = () => {
     toast.success('Buyer Persona validado');
@@ -39,67 +43,78 @@ export function StepPersona({
       </div>
 
       {/* Resumen persona */}
-      <div className="space-y-4 border rounded-lg p-4 sm:p-6 bg-gray-50">
-        <div>
-          <p className="text-sm text-gray-500 mb-1">Título / Rol</p>
-          <p className="font-medium">{buyerPersona.title}</p>
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="size-6 animate-spin text-[#1F554A]" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+      ) : !persona ? (
+        <div className="border rounded-lg p-6 bg-gray-50 text-sm text-gray-500 text-center">
+          Sin datos de persona para esta ejecución.
+        </div>
+      ) : (
+        <div className="space-y-4 border rounded-lg p-4 sm:p-6 bg-gray-50">
           <div>
-            <p className="text-sm text-gray-500 mb-1">Seniority</p>
-            <p className="font-medium">{buyerPersona.seniority}</p>
+            <p className="text-sm text-gray-500 mb-1">Título / Rol</p>
+            <p className="font-medium">{persona.titulo_rol}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Seniority</p>
+              <p className="font-medium">{persona.seniority}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Departamento</p>
+              <p className="font-medium">{persona.departamento}</p>
+            </div>
+          </div>
+          <Separator />
+          <div>
+            <p className="text-sm font-medium mb-2">Funciones</p>
+            <ul className="space-y-2">
+              {(persona.funciones ?? []).map((goal, i) => (
+                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                  <CheckCircle2 className="size-4 mt-0.5 flex-shrink-0 text-[#1F554A]" />
+                  <span>{goal}</span>
+                </li>
+              ))}
+            </ul>
           </div>
           <div>
-            <p className="text-sm text-gray-500 mb-1">Departamento</p>
-            <p className="font-medium">{buyerPersona.department}</p>
+            <p className="text-sm font-medium mb-2">Dolor Específico RE</p>
+            <ul className="space-y-2">
+              {(persona.dolor_especifico_re ?? []).map((pain, i) => (
+                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                  <AlertCircle className="size-4 mt-0.5 flex-shrink-0 text-gray-500" />
+                  <span>{pain}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-2">Por qué la empresa</p>
+            <ul className="space-y-2">
+              {(persona.porque_empresa ?? []).map((criteria, i) => (
+                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                  <span className="text-[#1F554A] font-bold">→</span>
+                  <span>{criteria}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-2">KPIs</p>
+            <ul className="space-y-2">
+              {(persona.kpis ?? []).map((criteria, i) => (
+                <li key={i} className="text-sm text-gray-700 flex gap-2">
+                  <span className="text-[#1F554A] font-bold">→</span>
+                  <span>{criteria}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-        <Separator />
-        <div>
-          <p className="text-sm font-medium mb-2">Funciones</p>
-          <ul className="space-y-2">
-            {buyerPersona.funciones.map((goal, i) => (
-              <li key={i} className="text-sm text-gray-700 flex gap-2">
-                <CheckCircle2 className="size-4 mt-0.5 flex-shrink-0 text-[#1F554A]" />
-                <span>{goal}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="text-sm font-medium mb-2">Dolor Específico RE</p>
-          <ul className="space-y-2">
-            {buyerPersona.dolorEspecificoRE.map((pain, i) => (
-              <li key={i} className="text-sm text-gray-700 flex gap-2">
-                <AlertCircle className="size-4 mt-0.5 flex-shrink-0 text-gray-500" />
-                <span>{pain}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="text-sm font-medium mb-2">Por qué la empresa</p>
-          <ul className="space-y-2">
-            {buyerPersona.porQueEmpresa.map((criteria, i) => (
-              <li key={i} className="text-sm text-gray-700 flex gap-2">
-                <span className="text-[#1F554A] font-bold">→</span>
-                <span>{criteria}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="text-sm font-medium mb-2">KPIs</p>
-          <ul className="space-y-2">
-            {buyerPersona.kpis.map((criteria, i) => (
-              <li key={i} className="text-sm text-gray-700 flex gap-2">
-                <span className="text-[#1F554A] font-bold">→</span>
-                <span>{criteria}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      )}
+
       {/* Ajustes opcionales */}
       <div>
         <Label className="text-sm mb-2 block">Ajustes o comentarios (opcional)</Label>

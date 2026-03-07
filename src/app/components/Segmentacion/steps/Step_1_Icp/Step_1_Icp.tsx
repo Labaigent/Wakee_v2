@@ -1,6 +1,11 @@
 // Librerías externas
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { ArrowRight, Loader2 } from 'lucide-react';
+
+// Servicios
+import { triggerE4Persona } from '@/services/n8nService';
+import type { E4PersonaPayload } from '@/services/n8nService';
 
 // Componentes internos
 import { Button } from '../../../ui/button';
@@ -16,6 +21,7 @@ import type { E3IcpOutput } from '@/types/db/e3IcpOutput';
 import { useE3IcpOutputsQuery } from '@/app/queries/e3IcpOutputs';
 
 interface StepIcpProps {
+  perfilId: number;
   ejecucionId: number | null;
   selectedIcp: string;
   onSelectedIcpChange: (value: string) => void;
@@ -23,6 +29,7 @@ interface StepIcpProps {
   onExpandedIcpChange: (id: string | null) => void;
   onConfirm: () => void;
   onCancel: () => void;
+  isCompleted?: boolean;
 }
 
 /** Convierte el output plano de BD (E3) al tipo IcpOption anidado del componente */
@@ -50,6 +57,7 @@ function mapE3IcpOutputToOption(output: E3IcpOutput): IcpOption {
  * filtrados por ejecucion_id.
  */
 export function StepIcp({
+  perfilId,
   ejecucionId,
   selectedIcp,
   onSelectedIcpChange,
@@ -57,19 +65,32 @@ export function StepIcp({
   onExpandedIcpChange,
   onConfirm,
   onCancel,
+  isCompleted = false,
 }: StepIcpProps) {
   const { data: rawOutputs = [], isLoading: icpOutputsLoading } = useE3IcpOutputsQuery(ejecucionId);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const icpOptions = rawOutputs.map(mapE3IcpOutputToOption);
 
   // --- Handlers ---
-  const handleConfirm = () => {
-    if (!selectedIcp) {
-      toast.error('Selecciona un ICP');
-      return;
+  const handleConfirm = async () => {
+    if (!selectedIcp || ejecucionId == null) return;
+    setIsSubmitting(true);
+
+    try {
+      const payload: E4PersonaPayload = {
+        perfil_id: perfilId,
+        ejecucion_id: ejecucionId,
+        icp_rank: Number(selectedIcp),
+      };
+      await triggerE4Persona(payload);
+      toast.success('ICP confirmado');
+      onConfirm();
+    } catch {
+      toast.error('Error al confirmar el ICP. Intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
     }
-    toast.success('ICP confirmado');
-    onConfirm();
   };
 
   return (
@@ -88,7 +109,7 @@ export function StepIcp({
       ) : icpOptions.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-8">Sin ICPs disponibles para esta ejecución.</p>
       ) : (
-        <RadioGroup value={selectedIcp} onValueChange={onSelectedIcpChange}>
+        <RadioGroup value={selectedIcp} onValueChange={isCompleted ? undefined : onSelectedIcpChange}>
           <div className="space-y-4">
             {icpOptions.map((icp) => (
               <IcpCard
@@ -106,18 +127,29 @@ export function StepIcp({
       <Separator />
 
       {/* Acciones */}
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center">
         <Button variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button
-          onClick={handleConfirm}
-          disabled={!selectedIcp}
-          className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90"
-        >
-          Confirmar y continuar
-          <ArrowRight className="size-4 ml-2" />
-        </Button>
+        <div className="flex flex-col items-end gap-1">
+          {isCompleted && (
+            <p className="text-xs text-gray-400">Este paso ya fue ejecutado en esta ejecución.</p>
+          )}
+          <Button
+            onClick={handleConfirm}
+            disabled={!selectedIcp || isSubmitting || isCompleted}
+            className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90"
+          >
+            {isSubmitting ? (
+              <Loader2 className="size-4 mr-2 animate-spin" />
+            ) : (
+              <>
+                Confirmar y continuar
+                <ArrowRight className="size-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

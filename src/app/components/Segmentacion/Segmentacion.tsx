@@ -273,6 +273,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'icp' && (
           <StepIcp
+            perfilId={perfilId}
             ejecucionId={selectedExecutionId}
             selectedIcp={selectedIcp}
             onSelectedIcpChange={setSelectedIcp}
@@ -283,11 +284,13 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
               updateMaxReached('persona');
             }}
             onCancel={handleCancelToIntro}
+            isCompleted={getStepIndex(maxReachedStep) > getStepIndex('icp')}
           />
         )}
 
         {currentStep === 'persona' && (
           <StepPersona
+            ejecucionId={selectedExecutionId}
             personaEdits={personaEdits}
             onPersonaEditsChange={setPersonaEdits}
             onConfirm={() => {
