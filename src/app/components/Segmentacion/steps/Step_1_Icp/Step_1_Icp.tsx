@@ -109,7 +109,7 @@ export function StepIcp({
       ) : icpOptions.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-8">Sin ICPs disponibles para esta ejecución.</p>
       ) : (
-        <RadioGroup value={selectedIcp} onValueChange={onSelectedIcpChange}>
+        <RadioGroup value={selectedIcp} onValueChange={isCompleted ? undefined : onSelectedIcpChange}>
           <div className="space-y-4">
             {icpOptions.map((icp) => (
               <IcpCard
