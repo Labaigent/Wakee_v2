@@ -22,6 +22,7 @@ interface StepPersonaProps {
   onPersonaEditsChange: (value: string) => void;
   onConfirm: () => void;
   onBack: () => void;
+  isCompleted?: boolean;
 }
 
 export function StepPersona({
@@ -31,6 +32,7 @@ export function StepPersona({
   onPersonaEditsChange,
   onConfirm,
   onBack,
+  isCompleted = false,
 }: StepPersonaProps) {
   const { data: persona, isLoading } = useE4PersonaOutputQuery(ejecucionId);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -149,18 +151,23 @@ export function StepPersona({
           <ArrowLeft className="size-4 mr-2" />
           Volver
         </Button>
-        <Button
-          onClick={handleConfirm}
-          disabled={isSubmitting}
-          className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90"
-        >
-          {isSubmitting ? (
-            <Loader2 className="size-4 mr-2 animate-spin" />
-          ) : (
-            <ArrowRight className="size-4 ml-2" />
+        <div className="flex flex-col items-end gap-1">
+          {isCompleted && (
+            <p className="text-xs text-gray-500">Este paso ya fue ejecutado en esta ejecución.</p>
           )}
-          {isSubmitting ? 'Generando filtro...' : 'Validar y continuar'}
-        </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={isSubmitting || isCompleted}
+            className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90"
+          >
+            {isSubmitting ? (
+              <Loader2 className="size-4 mr-2 animate-spin" />
+            ) : (
+              <ArrowRight className="size-4 ml-2" />
+            )}
+            {isSubmitting ? 'Generando filtro...' : 'Validar y continuar'}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -299,6 +299,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
               updateMaxReached('filtro');
             }}
             onBack={() => setCurrentStep('icp')}
+            isCompleted={getStepIndex(maxReachedStep) > getStepIndex('persona')}
           />
         )}
 
