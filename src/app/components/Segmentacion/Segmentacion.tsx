@@ -303,6 +303,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'filtro' && (
           <StepFiltro
+            ejecucionId={selectedExecutionId}
             onConfirm={() => {
               setProcessingProgress(0);
               setProcessingStatus('');

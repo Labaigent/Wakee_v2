@@ -6,6 +6,7 @@ import type { InputEstrategicoOption } from '../types/db/inputEstrategico';
 import type { Ejecucion } from '../types/db/ejecucion';
 import type { E3IcpOutput } from '../types/db/e3IcpOutput';
 import type { E4PersonaOutput } from '../types/db/e4PersonaOutput';
+import type { E5LinkOutput } from '../types/db/e5LinkOutput';
 
 /**
  * Fetch market signals for a given week from Supabase
@@ -318,5 +319,29 @@ export async function fetchE4PersonaOutput(ejecucionId: number): Promise<E4Perso
     return data;
   } catch {
     throw new Error('Failed to retrieve E4 persona output from ejecuciones.e4_ejecucion_output_persona');
+  }
+}
+
+/**
+ * Obtiene el link de Sales Navigator (E5) para una ejecución específica.
+ * Tabla: ejecuciones.e5_link_output
+ */
+export async function fetchE5LinkOutput(ejecucionId: number): Promise<E5LinkOutput | null> {
+  if (!isSupabaseAvailable() || !supabase) {
+    console.warn('[supabaseService] Supabase no disponible - devolviendo null para e5 link output');
+    return null;
+  }
+  try {
+    const { data, error } = await supabase
+      .schema('ejecuciones')
+      .from('e5_link_output')
+      .select('*')
+      .eq('ejecucion_id', ejecucionId)
+      .order('id', { ascending: false })
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  } catch {
+    throw new Error('Failed to retrieve E5 link output from ejecuciones.e5_link_output');
   }
 }
