@@ -11,6 +11,7 @@
   - `Master Report`: Actualización de inteligencia general.
   - `E3 ICP`: Generación de propuestas de valor segmentadas (Etapa ICP).
   - `E4 Persona`: Definición de perfil de interlocutor (Etapa Persona).
+  - `E5 Filtro`: Generación del enlace de LinkedIn Sales Navigator con filtros optimizados (Etapa Filtro).
 - **TanStack Query**: caching y revalidación de datos en componentes que consumen Supabase.
 - **Context API (Perfil)**: gestión global de la sesión activa y datos de perfil del usuario.
 
@@ -43,6 +44,7 @@
    - `VITE_N8N_MASTER_REPORT_WEBHOOK_URL` (actualización del reporte maestro).
    - `VITE_N8N_E3_ICP_WEBHOOK_URL` (flujo Segmentación / ICP).
    - `VITE_N8N_E4_PERSONA_WEBHOOK_URL` (flujo Segmentación / Persona).
+   - `VITE_N8N_E5_FILTRO_WEBHOOK_URL` (flujo Segmentación / Filtro → enlace Sales Navigator).
 4. Arranca en desarrollo:
 
    ```bash
