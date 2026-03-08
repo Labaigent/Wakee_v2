@@ -125,3 +125,32 @@ export async function triggerE4Persona(payload: E4PersonaPayload): Promise<void>
   }
 }
 
+/** Webhook URL for triggering the E5 Filtro generation workflow */
+const E5_FILTRO_WEBHOOK_URL = import.meta.env.VITE_N8N_E5_FILTRO_WEBHOOK_URL;
+
+/** Payload sent to the E5 Filtro webhook */
+export interface E5FiltroPayload {
+  perfil_id: number;
+  ejecucion_id: number;
+}
+
+/**
+ * Trigger the E5 Filtro generation workflow in n8n
+ *
+ * Purpose: Sends a POST request to the n8n webhook to start the automation
+ * that generates the LinkedIn Sales Navigator filter URL.
+ *
+ * @param payload - Perfil and execution context required by the workflow
+ * @throws {Error} If the webhook responds with a non-OK HTTP status
+ */
+export async function triggerE5Filtro(payload: E5FiltroPayload): Promise<void> {
+  const response = await fetch(E5_FILTRO_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`[n8nService] Webhook error: ${response.status}`);
+  }
+}

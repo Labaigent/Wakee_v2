@@ -1,4 +1,5 @@
 // External libraries
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -11,7 +12,11 @@ import { Separator } from '../../ui/separator';
 // Internal — queries
 import { useE4PersonaOutputQuery } from '@/app/queries/e4PersonaOutput';
 
+// Internal — services
+import { triggerE5Filtro } from '@/services/n8nService';
+
 interface StepPersonaProps {
+  perfilId: number | null;
   ejecucionId: number | null;
   personaEdits: string;
   onPersonaEditsChange: (value: string) => void;
@@ -20,6 +25,7 @@ interface StepPersonaProps {
 }
 
 export function StepPersona({
+  perfilId,
   ejecucionId,
   personaEdits,
   onPersonaEditsChange,
@@ -27,11 +33,22 @@ export function StepPersona({
   onBack,
 }: StepPersonaProps) {
   const { data: persona, isLoading } = useE4PersonaOutputQuery(ejecucionId);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- Handlers ---
-  const handleConfirm = () => {
-    toast.success('Buyer Persona validado');
-    onConfirm();
+  const handleConfirm = async () => {
+    if (!perfilId || !ejecucionId) return;
+    setIsSubmitting(true);
+
+    try {
+      await triggerE5Filtro({ perfil_id: perfilId, ejecucion_id: ejecucionId });
+      toast.success('Buyer Persona validado. Generando filtro...');
+      onConfirm();
+    } catch {
+      toast.error('Error al generar el filtro. Intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -132,9 +149,17 @@ export function StepPersona({
           <ArrowLeft className="size-4 mr-2" />
           Volver
         </Button>
-        <Button onClick={handleConfirm} className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90">
-          Validar y continuar
-          <ArrowRight className="size-4 ml-2" />
+        <Button
+          onClick={handleConfirm}
+          disabled={isSubmitting}
+          className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90"
+        >
+          {isSubmitting ? (
+            <Loader2 className="size-4 mr-2 animate-spin" />
+          ) : (
+            <ArrowRight className="size-4 ml-2" />
+          )}
+          {isSubmitting ? 'Generando filtro...' : 'Validar y continuar'}
         </Button>
       </div>
     </div>

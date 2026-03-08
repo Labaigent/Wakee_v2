@@ -290,6 +290,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'persona' && (
           <StepPersona
+            perfilId={perfilId}
             ejecucionId={selectedExecutionId}
             personaEdits={personaEdits}
             onPersonaEditsChange={setPersonaEdits}
