@@ -77,6 +77,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
   const [selectedIcp, setSelectedIcp] = useState('');
   const [expandedIcp, setExpandedIcp] = useState<string | null>(null);
   const [personaEdits, setPersonaEdits] = useState('');
+  const [linkedinCookie, setLinkedinCookie] = useState('');
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingStatus, setProcessingStatus] = useState('');
 
@@ -125,6 +126,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
       setSelectedIcp('');
       setExpandedIcp(null);
       setPersonaEdits('');
+      setLinkedinCookie('');
       setProcessingProgress(0);
       setProcessingStatus('');
       setCurrentStep('icp');
@@ -176,6 +178,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
     setSelectedIcp('');
     setExpandedIcp(null);
     setPersonaEdits('');
+    setLinkedinCookie('');
     setProcessingProgress(0);
     setProcessingStatus('');
   };
@@ -306,6 +309,8 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
         {currentStep === 'filtro' && (
           <StepFiltro
             ejecucionId={selectedExecutionId}
+            linkedinCookie={linkedinCookie}
+            onLinkedinCookieChange={setLinkedinCookie}
             onConfirm={() => {
               setProcessingProgress(0);
               setProcessingStatus('');

@@ -1,10 +1,11 @@
 // External libraries
 import { toast } from 'sonner';
-import { ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import { ArrowRight, ArrowLeft, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 
 // Internal — components
 import { Button } from '../../ui/button';
 import { Separator } from '../../ui/separator';
+import { Textarea } from '../../ui/textarea';
 
 // Internal — queries
 import { useE5LinkOutputQuery } from '@/app/queries/e5LinkOutput';
@@ -15,14 +16,41 @@ interface StepFiltroProps {
   onConfirm: () => void;
   onBack: () => void;
   ejecucionId: number | null;
+  linkedinCookie: string;
+  onLinkedinCookieChange: (v: string) => void;
 }
 
-export function StepFiltro({ onConfirm, onBack, ejecucionId }: StepFiltroProps) {
+function validateLinkedinCookie(raw: string): { valid: boolean; error?: string } {
+  if (!raw.trim()) return { valid: false };
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0)
+      return { valid: false, error: 'Debe ser un array JSON con al menos una cookie' };
+    const allHaveFields = parsed.every(
+      (c) => typeof c === 'object' && c !== null && 'name' in c && 'value' in c
+    );
+    if (!allHaveFields)
+      return { valid: false, error: 'Formato inválido: cada cookie debe tener name y value' };
+    const hasLiAt = parsed.some((c) => c.name === 'li_at');
+    if (!hasLiAt)
+      return { valid: false, error: 'Falta la cookie de autenticación de LinkedIn (li_at)' };
+    return { valid: true };
+  } catch {
+    return { valid: false, error: 'No es un JSON válido' };
+  }
+}
+
+export function StepFiltro({ onConfirm, onBack, ejecucionId, linkedinCookie, onLinkedinCookieChange }: StepFiltroProps) {
   const { data: linkOutput, isLoading } = useE5LinkOutputQuery(ejecucionId);
   const salesNavUrl = linkOutput?.sales_navigator_url ?? FALLBACK_URL;
+  const cookieValidation = validateLinkedinCookie(linkedinCookie);
 
   // --- Handlers ---
   const handleConfirm = async () => {
+    if (!cookieValidation.valid) {
+      toast.error(cookieValidation.error ?? 'Debes ingresar una cookie de sesión de LinkedIn válida');
+      return;
+    }
     toast.success('Continuando con búsqueda...');
     onConfirm();
   };
@@ -62,6 +90,50 @@ export function StepFiltro({ onConfirm, onBack, ejecucionId }: StepFiltroProps) 
         </div>
       </div>
 
+      {/* Cookie de sesión */}
+      <div className="space-y-2">
+        <div>
+          <p className="text-sm font-medium text-[#141414]">Sesión de LinkedIn</p>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Copia tus cookies con EditThisCookie y pégalas aquí.
+          </p>
+        </div>
+
+        {cookieValidation.valid ? (
+          /* Estado: cookie válida — oculta el JSON */
+          <div className="flex items-center justify-between rounded-lg border border-[#1F554A] bg-[#1F554A]/5 px-4 py-3">
+            <div className="flex items-center gap-2 text-sm text-[#1F554A]">
+              <CheckCircle2 className="size-4 shrink-0" />
+              <span className="font-medium">Sesión cargada correctamente</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onLinkedinCookieChange('')}
+              className="text-xs text-gray-400 hover:text-gray-600 underline"
+            >
+              Cambiar
+            </button>
+          </div>
+        ) : (
+          /* Estado: vacío o inválido — muestra el textarea */
+          <div className="space-y-1.5">
+            <Textarea
+              value={linkedinCookie}
+              onChange={(e) => onLinkedinCookieChange(e.target.value)}
+              placeholder="Pega aquí el JSON de tus cookies…"
+              className="font-mono text-xs min-h-[80px] resize-none border-[#DCDEDC] focus:border-[#1F554A] focus:ring-[#1F554A]/30"
+              rows={3}
+            />
+            {linkedinCookie.trim() && (
+              <p className="flex items-center gap-1 text-xs text-red-600">
+                <XCircle className="size-3.5 shrink-0" />
+                {cookieValidation.error}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Aviso proceso automático */}
       <div className="bg-[#DCDEDC]/30 border border-[#DCDEDC] rounded-lg p-4">
         <div className="flex gap-3">
@@ -82,7 +154,11 @@ export function StepFiltro({ onConfirm, onBack, ejecucionId }: StepFiltroProps) 
           <ArrowLeft className="size-4 mr-2" />
           Volver
         </Button>
-        <Button onClick={handleConfirm} className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90">
+        <Button
+          onClick={handleConfirm}
+          disabled={!cookieValidation.valid}
+          className="bg-[#1F554A] text-white hover:bg-[#1F554A]/90 disabled:opacity-60"
+        >
           Continuar con ranking de leads
           <ArrowRight className="size-4 ml-2" />
         </Button>
