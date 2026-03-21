@@ -343,7 +343,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'ranking' && (
           <StepRanking
-            sessionId={SESSION_ID}
+            ejecucionId={selectedExecutionId}
             onComplete={(leads: string[]) => {
               setSelectedLeads(leads);
               toast.success('Top 5 seleccionado. Generando dossiers...');

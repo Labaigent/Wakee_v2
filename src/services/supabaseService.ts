@@ -7,6 +7,7 @@ import type { Ejecucion } from '../types/db/ejecucion';
 import type { E3IcpOutput } from '../types/db/e3IcpOutput';
 import type { E4PersonaOutput } from '../types/db/e4PersonaOutput';
 import type { E5LinkOutput } from '../types/db/e5LinkOutput';
+import type { E6BusquedaOutput } from '../types/db/e6BusquedaOutput';
 
 /**
  * Fetch market signals for a given week from Supabase
@@ -319,6 +320,91 @@ export async function fetchE4PersonaOutput(ejecucionId: number): Promise<E4Perso
     return data;
   } catch {
     throw new Error('Failed to retrieve E4 persona output from ejecuciones.e4_ejecucion_output_persona');
+  }
+}
+
+/**
+ * Obtiene los leads rankeados (E6) para una ejecución específica, enriquecidos con datos
+ * de linkedin.scraping_leads y linkedin.scraping_empresas.
+ *
+ * Estrategia: 3 queries secuenciales inevitables por dependencia de FKs entre esquemas:
+ *   1. e6_busqueda_output → obtiene lead_ids
+ *   2. scraping_leads WHERE lead_id IN (...) → obtiene empresa_ids
+ *   3. scraping_empresas WHERE empresa_id IN (...) → completa el join
+ */
+export async function fetchE6BusquedaOutputs(ejecucionId: number): Promise<E6BusquedaOutput[]> {
+  if (!isSupabaseAvailable() || !supabase) {
+    console.warn('[supabaseService] Supabase no disponible - devolviendo lista vacía de e6 busqueda outputs');
+    return [];
+  }
+  try {
+    // 1. Fetch ranked leads for the execution
+    const { data: rawOutputs, error: outputsError } = await supabase
+      .schema('ejecuciones')
+      .from('e6_busqueda_output')
+      .select('*')
+      .eq('ejecucion_id', ejecucionId)
+      .order('score_total', { ascending: false });
+
+    if (outputsError) throw outputsError;
+    if (!rawOutputs || rawOutputs.length === 0) return [];
+
+    const leadIds = rawOutputs.map((o) => o.lead_id).filter(Boolean) as string[];
+
+    // 2. Fetch lead profiles for all lead_ids
+    const { data: leads, error: leadsError } = await supabase
+      .schema('linkedin')
+      .from('scraping_leads')
+      .select('lead_id, empresa_id, sn_nombre_completo, sn_cargo_actual, sn_ubicacion, sn_url_linkedin_perfil_publico, sn_titular, enr_resumen_bio, enr_num_seguidores, enr_num_conexiones, sn_es_premium, enr_influencer')
+      .in('lead_id', leadIds);
+
+    if (leadsError) throw leadsError;
+
+    const empresaIds = [...new Set(
+      (leads ?? []).map((l) => l.empresa_id).filter(Boolean) as string[]
+    )];
+
+    // 3. Fetch company data for all empresa_ids found in step 2
+    const { data: empresas, error: empresasError } = await supabase
+      .schema('linkedin')
+      .from('scraping_empresas')
+      .select('empresa_id, sn_emp_nombre, sn_emp_url_linkedin, en_emp_sitio_web, enr_emp_industria, enr_emp_tamano_rango, enr_emp_empleados_linkedin, enr_emp_descripcion, enr_emp_sede_principal, enr_emp_tipo_organizacion')
+      .in('empresa_id', empresaIds.length > 0 ? empresaIds : ['__none__']);
+
+    if (empresasError) throw empresasError;
+
+    const leadMap = new Map((leads ?? []).map((l) => [l.lead_id as string, l]));
+    const empresaMap = new Map((empresas ?? []).map((e) => [e.empresa_id as string, e]));
+
+    return rawOutputs.map((output) => {
+      const lead = leadMap.get(output.lead_id) ?? null;
+      const empresa = lead?.empresa_id ? empresaMap.get(lead.empresa_id) ?? null : null;
+      return {
+        ...output,
+        sn_nombre_completo: lead?.sn_nombre_completo ?? null,
+        sn_cargo_actual: lead?.sn_cargo_actual ?? null,
+        sn_ubicacion: lead?.sn_ubicacion ?? null,
+        sn_url_linkedin_perfil_publico: lead?.sn_url_linkedin_perfil_publico ?? null,
+        sn_titular: lead?.sn_titular ?? null,
+        enr_resumen_bio: lead?.enr_resumen_bio ?? null,
+        enr_num_seguidores: lead?.enr_num_seguidores ?? null,
+        enr_num_conexiones: lead?.enr_num_conexiones ?? null,
+        sn_es_premium: lead?.sn_es_premium ?? null,
+        enr_influencer: lead?.enr_influencer ?? null,
+        empresa_id: lead?.empresa_id ?? null,
+        sn_emp_nombre: empresa?.sn_emp_nombre ?? null,
+        sn_emp_url_linkedin: empresa?.sn_emp_url_linkedin ?? null,
+        en_emp_sitio_web: empresa?.en_emp_sitio_web ?? null,
+        enr_emp_industria: empresa?.enr_emp_industria ?? null,
+        enr_emp_tamano_rango: empresa?.enr_emp_tamano_rango ?? null,
+        enr_emp_empleados_linkedin: empresa?.enr_emp_empleados_linkedin ?? null,
+        enr_emp_descripcion: empresa?.enr_emp_descripcion ?? null,
+        enr_emp_sede_principal: empresa?.enr_emp_sede_principal ?? null,
+        enr_emp_tipo_organizacion: empresa?.enr_emp_tipo_organizacion ?? null,
+      } as E6BusquedaOutput;
+    });
+  } catch {
+    throw new Error('Failed to retrieve E6 busqueda outputs from ejecuciones.e6_busqueda_output');
   }
 }
 
