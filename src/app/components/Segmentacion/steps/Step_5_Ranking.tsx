@@ -46,6 +46,7 @@ interface StepRankingProps {
 
 // --- Helpers ---
 
+/** Returns Tailwind color classes for a score badge based on 0–10 thresholds (green ≥7, amber ≥4, gray <4). */
 function getScoreColor(score: number | null) {
   if (score === null) return 'text-gray-500 bg-gray-50 border-gray-200';
   if (score >= 7) return 'text-[#1F554A] bg-[#C4FF81]/20 border-[#1F554A]';
@@ -53,15 +54,31 @@ function getScoreColor(score: number | null) {
   return 'text-gray-500 bg-gray-50 border-gray-200';
 }
 
+/** Formats a numeric score to one decimal place, or returns '—' if null. */
 function formatScore(score: number | null): string {
   if (score === null) return '—';
   return score.toFixed(1);
 }
 
+/** Abbreviates large follower/connection counts (e.g. 1500 → '1.5k'). Returns '—' if null. */
 function formatCount(n: number | null): string {
   if (n === null) return '—';
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
   return String(n);
+}
+
+/** Converts a string to Title Case, handling spaces, hyphens, and slashes as word separators. */
+function toTitleCase(str: string | null): string | null {
+  if (!str) return str;
+  return str
+    .toLowerCase()
+    .replace(/(?:^|\s|-|\/)\S/g, (c) => c.toUpperCase());
+}
+
+/** Strips the word "employees" from LinkedIn's company size ranges (e.g. '51-200 employees' → '51-200'). */
+function formatEmpRange(range: string | null): string | null {
+  if (!range) return null;
+  return range.replace(/\s*employees\s*/i, '').trim();
 }
 
 // --- Score Detail Panel ---
@@ -366,7 +383,7 @@ export function StepRanking({ ejecucionId, onComplete }: StepRankingProps) {
       <div className="border-2 border-[#DCDEDC] rounded-lg overflow-hidden">
         {/* Table header — desktop only */}
         <div className="hidden lg:grid bg-[#1F554A] text-white px-4 py-3 text-xs font-medium uppercase tracking-wide"
-          style={{ gridTemplateColumns: '2.5rem 1fr 1fr 1fr 5rem 1.5rem' }}>
+          style={{ gridTemplateColumns: '2.5rem minmax(0,1.1fr) minmax(0,1.2fr) minmax(0,0.7fr) 5.5rem 1.5rem' }}>
           <div></div>
           <div>Lead</div>
           <div>Empresa</div>
@@ -386,13 +403,13 @@ export function StepRanking({ ejecucionId, onComplete }: StepRankingProps) {
               <div key={lead.lead_id}>
                 {/* Desktop row */}
                 <div
-                  className={`hidden lg:grid px-4 py-3 items-center cursor-pointer transition-colors gap-3
+                  className={`hidden lg:grid px-4 py-3.5 items-center cursor-pointer transition-colors gap-4
                     ${isSelected ? 'bg-[#C4FF81]/10' : 'hover:bg-[#C4FF81]/5'}`}
-                  style={{ gridTemplateColumns: '2.5rem 1fr 1fr 1fr 5rem 1.5rem' }}
+                  style={{ gridTemplateColumns: '2.5rem minmax(0,1.1fr) minmax(0,1.2fr) minmax(0,0.7fr) 5.5rem 1.5rem' }}
                   onClick={() => handleRowClick(lead.lead_id)}
                 >
-                  {/* Checkbox + rank */}
-                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  {/* Checkbox */}
+                  <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => handleLeadToggle(lead.lead_id)}
@@ -401,62 +418,79 @@ export function StepRanking({ ejecucionId, onComplete }: StepRankingProps) {
                   </div>
 
                   {/* Lead info */}
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-[10px] text-gray-400 font-medium">#{index + 1}</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1 min-w-0">
+                      <span className="text-[10px] text-gray-400 font-medium shrink-0">#{index + 1}</span>
                       {lead.sn_url_linkedin_perfil_publico ? (
                         <a
                           href={lead.sn_url_linkedin_perfil_publico}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="font-medium text-sm text-[#141414] hover:text-[#1F554A] transition-colors inline-flex items-center gap-1"
+                          className="font-medium text-sm text-[#141414] hover:text-[#1F554A] transition-colors flex items-center gap-1 min-w-0"
                         >
-                          {lead.sn_nombre_completo ?? '—'}
+                          <span className="truncate">{lead.sn_nombre_completo ?? '—'}</span>
                           <svg className="size-3 text-[#0077B5] shrink-0" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                           </svg>
                         </a>
                       ) : (
-                        <span className="font-medium text-sm text-[#141414]">
+                        <span className="font-medium text-sm text-[#141414] truncate">
                           {lead.sn_nombre_completo ?? '—'}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-600 flex items-center gap-1">
-                      <Briefcase className="size-3 shrink-0" />
-                      {lead.sn_cargo_actual ?? '—'}
+                    <p className="text-xs text-gray-500 flex items-center gap-1 truncate">
+                      <Briefcase className="size-3 shrink-0 text-gray-400" />
+                      <span className="truncate">{lead.sn_cargo_actual ?? '—'}</span>
                     </p>
                   </div>
 
                   {/* Company info */}
-                  <div>
-                    <p className="font-medium text-sm mb-0.5 flex items-center gap-1 text-[#141414]">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1 min-w-0">
                       <Building2 className="size-3 text-[#1F554A] shrink-0" />
-                      {lead.sn_emp_nombre ?? '—'}
-                    </p>
+                      <span className="font-medium text-sm text-[#141414] truncate">{toTitleCase(lead.sn_emp_nombre) ?? '—'}</span>
+                      {lead.sn_emp_url_linkedin && (
+                        <a
+                          href={lead.sn_emp_url_linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="shrink-0 text-[#0077B5] hover:text-[#0077B5]/80 transition-colors"
+                          title="Ver empresa en LinkedIn"
+                        >
+                          <svg className="size-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
                     {lead.enr_emp_industria && (
                       <p className="text-xs text-gray-500 truncate">{lead.enr_emp_industria}</p>
                     )}
-                    {lead.enr_emp_tamano_rango && (
-                      <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                        <Users className="size-3 shrink-0" />
-                        {lead.enr_emp_tamano_rango}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                      {lead.enr_emp_tamano_rango && (
+                        <span className="text-xs text-gray-400 flex items-center gap-1 shrink-0">
+                          <Users className="size-3 shrink-0" />
+                          {formatEmpRange(lead.enr_emp_tamano_rango)}
+                        </span>
+                      )}
+                      {lead.enr_emp_sede_principal && (
+                        <span className="text-xs text-gray-400 flex items-center gap-1 truncate">
+                          <MapPin className="size-3 shrink-0" />
+                          <span className="truncate">{lead.enr_emp_sede_principal}</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Location */}
-                  <div>
+                  {/* Lead location */}
+                  <div className="min-w-0">
                     {lead.sn_ubicacion ? (
                       <p className="text-xs text-gray-600 flex items-start gap-1">
                         <MapPin className="size-3 text-[#1F554A] shrink-0 mt-0.5" />
-                        {lead.sn_ubicacion}
-                      </p>
-                    ) : lead.enr_emp_sede_principal ? (
-                      <p className="text-xs text-gray-500 flex items-start gap-1">
-                        <MapPin className="size-3 shrink-0 mt-0.5" />
-                        {lead.enr_emp_sede_principal}
+                        <span className="line-clamp-2">{lead.sn_ubicacion}</span>
                       </p>
                     ) : (
                       <span className="text-xs text-gray-400">—</span>
@@ -509,9 +543,31 @@ export function StepRanking({ ejecucionId, onComplete }: StepRankingProps) {
                         {lead.sn_nombre_completo ?? '—'}
                       </p>
                       <p className="text-xs text-gray-600 mb-1">{lead.sn_cargo_actual ?? '—'}</p>
-                      <p className="text-xs text-gray-700 font-medium">{lead.sn_emp_nombre ?? '—'}</p>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-gray-700 font-medium">{toTitleCase(lead.sn_emp_nombre) ?? '—'}</span>
+                        {lead.sn_emp_url_linkedin && (
+                          <a
+                            href={lead.sn_emp_url_linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="shrink-0 text-[#0077B5]"
+                            title="Ver empresa en LinkedIn"
+                          >
+                            <svg className="size-3" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                            </svg>
+                          </a>
+                        )}
+                      </div>
                       {lead.enr_emp_industria && (
                         <p className="text-xs text-gray-500">{lead.enr_emp_industria}</p>
+                      )}
+                      {lead.enr_emp_sede_principal && (
+                        <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                          <MapPin className="size-3 shrink-0" />
+                          {lead.enr_emp_sede_principal}
+                        </p>
                       )}
                       {lead.sn_ubicacion && (
                         <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
