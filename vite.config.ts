@@ -17,6 +17,16 @@ export default defineConfig({
     },
   },
 
+  server: {
+    proxy: {
+      '/api/n8n': {
+        target: 'https://camilov.app.n8n.cloud',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/n8n/, ''),
+      },
+    },
+  },
+
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 })

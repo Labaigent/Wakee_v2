@@ -311,6 +311,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'filtro' && (
           <StepFiltro
+            perfilId={perfilId}
             ejecucionId={selectedExecutionId}
             linkedinCookie={linkedinCookie}
             onLinkedinCookieChange={setLinkedinCookie}

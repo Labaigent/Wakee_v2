@@ -14,11 +14,15 @@ import { Input } from '../../ui/input';
 // Internal — queries
 import { useE5LinkOutputQuery } from '@/app/queries/e5LinkOutput';
 
+// Internal — services
+import { triggerE6Busqueda } from '@/services/n8nService';
+
 const FALLBACK_URL = 'https://www.linkedin.com/sales/search/people';
 
 interface StepFiltroProps {
   onConfirm: () => void;
   onBack: () => void;
+  perfilId: number | null;
   ejecucionId: number | null;
   linkedinCookie: string;
   onLinkedinCookieChange: (v: string) => void;
@@ -53,6 +57,7 @@ function validateLinkedinCookie(raw: string): { valid: boolean; error?: string }
 export function StepFiltro({
   onConfirm,
   onBack,
+  perfilId,
   ejecucionId,
   linkedinCookie,
   onLinkedinCookieChange,
@@ -88,6 +93,7 @@ export function StepFiltro({
   };
 
   const handleConfirm = () => {
+    if (!perfilId || !ejecucionId) return;
     if (!urlIsValid) {
       toast.error('El link de Sales Navigator no es válido');
       return;
@@ -96,7 +102,14 @@ export function StepFiltro({
       toast.error(cookieValidation.error ?? 'Debes ingresar una cookie de sesión de LinkedIn válida');
       return;
     }
-    toast.success('Continuando con búsqueda...');
+    triggerE6Busqueda({
+      perfil_id: perfilId,
+      ejecucion_id: ejecucionId,
+      sales_navigator_url: effectiveUrl,
+      linkedin_cookie: JSON.parse(linkedinCookie),
+    }).catch(() => {
+      // Error silencioso — el usuario ya avanzó a Step_4
+    });
     onConfirm();
   };
 
