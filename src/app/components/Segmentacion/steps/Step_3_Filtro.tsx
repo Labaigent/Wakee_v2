@@ -69,12 +69,12 @@ export function StepFiltro({
 
   const [customUrl, setCustomUrl] = useState('');
 
-  // Pre-fill activeSalesNavUrl from E5 query result (only once, if not already set)
+  // Pre-fill activeSalesNavUrl from E5 query result whenever ejecucionId or salesNavUrl changes
   useEffect(() => {
-    if (salesNavUrl && salesNavUrl !== FALLBACK_URL && !activeSalesNavUrl) {
+    if (salesNavUrl && salesNavUrl !== FALLBACK_URL) {
       onActiveSalesNavUrlChange(salesNavUrl);
     }
-  }, [salesNavUrl]);
+  }, [salesNavUrl, ejecucionId]);
 
   const effectiveUrl = activeSalesNavUrl || salesNavUrl;
   const cookieValidation = validateLinkedinCookie(linkedinCookie);

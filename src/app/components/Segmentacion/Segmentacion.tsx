@@ -165,6 +165,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
     setCurrentStep('intro');
     setMaxReachedStep('intro');
     setSelectedExecutionId(null);
+    setActiveSalesNavUrl('');
   };
 
   const handleStepNavClick = (step: Exclude<SegmentacionStep, 'intro'>) => {
