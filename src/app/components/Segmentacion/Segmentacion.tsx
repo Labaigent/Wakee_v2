@@ -79,8 +79,6 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
   const [personaEdits, setPersonaEdits] = useState('');
   const [linkedinCookie, setLinkedinCookie] = useState('');
   const [activeSalesNavUrl, setActiveSalesNavUrl] = useState('');
-  const [processingProgress, setProcessingProgress] = useState(0);
-  const [processingStatus, setProcessingStatus] = useState('');
 
   // Mock: una sola tarea de estrategia para el flujo actual
   const pendingTasks = [
@@ -129,8 +127,6 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
       setPersonaEdits('');
       setLinkedinCookie('');
       setActiveSalesNavUrl('');
-      setProcessingProgress(0);
-      setProcessingStatus('');
       setCurrentStep('icp');
       setMaxReachedStep('icp');
     } catch {
@@ -183,8 +179,6 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
     setPersonaEdits('');
     setLinkedinCookie('');
     setActiveSalesNavUrl('');
-    setProcessingProgress(0);
-    setProcessingStatus('');
   };
 
   return (
@@ -319,8 +313,6 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
             activeSalesNavUrl={activeSalesNavUrl}
             onActiveSalesNavUrlChange={setActiveSalesNavUrl}
             onConfirm={() => {
-              setProcessingProgress(0);
-              setProcessingStatus('');
               setCurrentStep('busqueda');
               updateMaxReached('busqueda');
             }}
@@ -330,12 +322,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'busqueda' && (
           <StepBusqueda
-            processingProgress={processingProgress}
-            processingStatus={processingStatus}
-            onProgress={(progress, status) => {
-              setProcessingProgress(progress);
-              setProcessingStatus(status);
-            }}
+            ejecucionId={selectedExecutionId}
             onComplete={() => {
               setCurrentStep('ranking');
               updateMaxReached('ranking');
