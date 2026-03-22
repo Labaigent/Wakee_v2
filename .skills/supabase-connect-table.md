@@ -365,6 +365,22 @@ Después de implementar, verificar:
 
 ---
 
+## Convención: comentarios en helpers de componente
+
+Si el componente define funciones helper locales (formatters, mappers de color, transformaciones de texto, etc.), añade una línea de comentario JSDoc (`/** ... */`) encima de cada una explicando su propósito en una frase. Esto es obligatorio para helpers no triviales.
+
+**Ejemplo:**
+
+```typescript
+/** Converts a string to Title Case, handling spaces, hyphens, and slashes as word separators. */
+function toTitleCase(str: string | null): string | null { ... }
+
+/** Strips the word "employees" from LinkedIn's company size ranges (e.g. '51-200 employees' → '51-200'). */
+function formatEmpRange(range: string | null): string | null { ... }
+```
+
+---
+
 ## Lo que NO hacer
 
 - No escribir código sin antes verificar RLS — una tabla sin políticas devuelve `[]` sin error, el bug es invisible
@@ -374,6 +390,7 @@ Después de implementar, verificar:
 - No duplicar la `queryKey` como string en distintos archivos — siempre importar la constante exportada
 - No agregar lógica de negocio en el query file — solo envuelve la función del service
 - No crear múltiples instancias de `QueryClient`
+- No dejar helpers de componente sin comentario JSDoc — un helper sin comentario obliga al lector a deducir su propósito
 
 ---
 

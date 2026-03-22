@@ -77,8 +77,8 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
   const [selectedIcp, setSelectedIcp] = useState('');
   const [expandedIcp, setExpandedIcp] = useState<string | null>(null);
   const [personaEdits, setPersonaEdits] = useState('');
-  const [processingProgress, setProcessingProgress] = useState(0);
-  const [processingStatus, setProcessingStatus] = useState('');
+  const [linkedinCookie, setLinkedinCookie] = useState('');
+  const [activeSalesNavUrl, setActiveSalesNavUrl] = useState('');
 
   // Mock: una sola tarea de estrategia para el flujo actual
   const pendingTasks = [
@@ -125,8 +125,8 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
       setSelectedIcp('');
       setExpandedIcp(null);
       setPersonaEdits('');
-      setProcessingProgress(0);
-      setProcessingStatus('');
+      setLinkedinCookie('');
+      setActiveSalesNavUrl('');
       setCurrentStep('icp');
       setMaxReachedStep('icp');
     } catch {
@@ -161,6 +161,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
     setCurrentStep('intro');
     setMaxReachedStep('intro');
     setSelectedExecutionId(null);
+    setActiveSalesNavUrl('');
   };
 
   const handleStepNavClick = (step: Exclude<SegmentacionStep, 'intro'>) => {
@@ -176,8 +177,8 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
     setSelectedIcp('');
     setExpandedIcp(null);
     setPersonaEdits('');
-    setProcessingProgress(0);
-    setProcessingStatus('');
+    setLinkedinCookie('');
+    setActiveSalesNavUrl('');
   };
 
   return (
@@ -305,10 +306,13 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'filtro' && (
           <StepFiltro
+            perfilId={perfilId}
             ejecucionId={selectedExecutionId}
+            linkedinCookie={linkedinCookie}
+            onLinkedinCookieChange={setLinkedinCookie}
+            activeSalesNavUrl={activeSalesNavUrl}
+            onActiveSalesNavUrlChange={setActiveSalesNavUrl}
             onConfirm={() => {
-              setProcessingProgress(0);
-              setProcessingStatus('');
               setCurrentStep('busqueda');
               updateMaxReached('busqueda');
             }}
@@ -318,12 +322,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'busqueda' && (
           <StepBusqueda
-            processingProgress={processingProgress}
-            processingStatus={processingStatus}
-            onProgress={(progress, status) => {
-              setProcessingProgress(progress);
-              setProcessingStatus(status);
-            }}
+            ejecucionId={selectedExecutionId}
             onComplete={() => {
               setCurrentStep('ranking');
               updateMaxReached('ranking');
@@ -333,7 +332,7 @@ export function Segmentacion({ initialExecutionId }: SegmentacionProps) {
 
         {currentStep === 'ranking' && (
           <StepRanking
-            sessionId={SESSION_ID}
+            ejecucionId={selectedExecutionId}
             onComplete={(leads: string[]) => {
               setSelectedLeads(leads);
               toast.success('Top 5 seleccionado. Generando dossiers...');

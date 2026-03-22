@@ -134,6 +134,17 @@ export interface E5FiltroPayload {
   ejecucion_id: number;
 }
 
+/** Webhook URL for triggering the E6 Busqueda scraping workflow */
+const E6_BUSQUEDA_WEBHOOK_URL = import.meta.env.VITE_N8N_E6_BUSQUEDA_WEBHOOK_URL;
+
+/** Payload sent to the E6 Busqueda webhook */
+export interface E6BusquedaPayload {
+  perfil_id: number;
+  ejecucion_id: number;
+  sales_navigator_url: string;
+  linkedin_cookie: object[];
+}
+
 /**
  * Trigger the E5 Filtro generation workflow in n8n
  *
@@ -145,6 +156,27 @@ export interface E5FiltroPayload {
  */
 export async function triggerE5Filtro(payload: E5FiltroPayload): Promise<void> {
   const response = await fetch(E5_FILTRO_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`[n8nService] Webhook error: ${response.status}`);
+  }
+}
+
+/**
+ * Trigger the E6 Busqueda scraping workflow in n8n
+ *
+ * Purpose: Sends a POST request to the n8n webhook to start the LinkedIn
+ * Sales Navigator scraping using the confirmed URL and session cookie.
+ *
+ * @param payload - Perfil, execution, Sales Navigator URL, and LinkedIn cookies
+ * @throws {Error} If the webhook responds with a non-OK HTTP status
+ */
+export async function triggerE6Busqueda(payload: E6BusquedaPayload): Promise<void> {
+  const response = await fetch(E6_BUSQUEDA_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
